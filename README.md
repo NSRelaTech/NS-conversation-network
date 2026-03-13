@@ -2,18 +2,33 @@
 
 A community social network for Novi Sad residents, built by [NSRelaTech](https://github.com/NSRelaTech).
 
+Inspired by the [Conversation Networks](https://arxiv.org/abs/2503.11714) paper (Roy, Lessig, Tang 2025), which proposes digital infrastructure for civic communication — where quality comes from structured, facilitated conversations rather than algorithmic feeds.
+
 **Live app: [empathetic-stillness-production.up.railway.app](https://empathetic-stillness-production.up.railway.app)**
 
-## Features
+## Vision
+
+The long-term goal is to evolve from a traditional social network toward a conversation network — a platform where community members engage through structured dialogue, not just posts and likes.
+
+Key principles from the paper guiding our direction:
+
+- **Conversations over content** — meaningful community discourse, not engagement-optimized feeds
+- **Three forms of civic communication** — bridging (across divides), listening (leaders hearing authentic voices), deliberation (collective reasoning toward decisions)
+- **AI as assistive, never mediating** — technology should expand participation and reveal patterns, but never come between people
+- **Interoperability** — open standards that allow community tools to work together
+
+The current MVP establishes the social foundation. Future iterations will introduce facilitated group conversations, structured deliberation flows, and conversation-first features.
+
+## Current Features
 
 - **User accounts** — register, login, JWT auth with refresh tokens
 - **Profiles** — avatar upload, bio, editable username/email/password
 - **Posts** — create, edit, delete with optimistic UI updates
 - **Feed** — home feed (followed users + joined groups), sortable by latest or popular (engagement score)
 - **Reactions** — like, love, laugh, wow, sad, angry with toggle
-- **Comments** — threaded comments on posts with inline create/delete
+- **Comments** — inline comments on posts with create/delete
 - **Groups** — create, join/leave, group feeds, admin edit/delete
-- **Account management** — change username, email, password, delete account (soft delete)
+- **Account management** — change username, email, password, delete account
 
 ## Tech Stack
 
@@ -87,6 +102,10 @@ Backend runs on `http://localhost:3000`, frontend on `http://localhost:5173`.
 ## Contributing
 
 Open to contributions from the NSRelaTech community. Fork, branch, PR.
+
+## References
+
+- Roy, D., Lessig, L., & Tang, A. (2025). *Conversation Networks*. arXiv:2503.11714. https://arxiv.org/abs/2503.11714
 
 ## License
 

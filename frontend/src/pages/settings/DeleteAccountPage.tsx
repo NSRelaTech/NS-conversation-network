@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 
 export function DeleteAccountPage() {
   const navigate = useNavigate();
-  const { logout, user } = useAuthStore();
+  const { logout } = useAuthStore();
   const [password, setPassword] = useState('');
   const [confirmation, setConfirmation] = useState('');
 

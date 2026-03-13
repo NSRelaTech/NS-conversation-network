@@ -23,43 +23,31 @@ export class FeedRepository {
    * Uses cursor-based pagination
    */
   async getHomeFeed(query: FeedQuery): Promise<FeedItem[]> {
-    const { followingIds, groupIds, cursor, limit } = query;
-
-    // Handle empty following and groups
-    if (
-      (!followingIds || followingIds.length === 0) &&
-      (!groupIds || groupIds.length === 0)
-    ) {
-      return [];
-    }
+    const { userId, followingIds, groupIds, cursor, limit } = query;
 
     const cursorTimestamp = cursor || new Date();
     const values: unknown[] = [];
     let paramIndex = 1;
 
+    // Always include user's own posts
+    const conditions: string[] = [];
+    values.push(userId);
+    conditions.push(`p.author_id = $${paramIndex++}`);
+
     // Build the WHERE clause for following IDs
-    let followingCondition = '';
     if (followingIds && followingIds.length > 0) {
-      followingCondition = `p.author_id = ANY($${paramIndex++})`;
+      conditions.push(`p.author_id = ANY($${paramIndex++})`);
       values.push(followingIds);
     }
 
     // Build the WHERE clause for group IDs
-    let groupCondition = '';
     if (groupIds && groupIds.length > 0) {
-      groupCondition = `p.group_id = ANY($${paramIndex++})`;
+      conditions.push(`p.group_id = ANY($${paramIndex++})`);
       values.push(groupIds);
     }
 
-    // Combine conditions
-    let sourceCondition = '';
-    if (followingCondition && groupCondition) {
-      sourceCondition = `(${followingCondition} OR ${groupCondition})`;
-    } else if (followingCondition) {
-      sourceCondition = followingCondition;
-    } else {
-      sourceCondition = groupCondition;
-    }
+    // Combine conditions with OR
+    const sourceCondition = `(${conditions.join(' OR ')})`;
 
     values.push(cursorTimestamp);
     const cursorParamIndex = paramIndex++;

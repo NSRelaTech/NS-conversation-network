@@ -110,7 +110,7 @@ export class PrismaMemberRepository implements MemberRepository {
       data: {
         groupId: data.groupId!,
         userId: data.userId!,
-        role: (data.role?.toUpperCase() || 'MEMBER') as any,
+        role: (this.mapRoleToDb(data.role || 'member')) as any,
       },
     });
     return this.toDomain(member);
@@ -137,7 +137,7 @@ export class PrismaMemberRepository implements MemberRepository {
     const member = await this.prisma.groupMember.update({
       where: { id },
       data: {
-        ...(data.role && { role: data.role.toUpperCase() as any }),
+        ...(data.role && { role: this.mapRoleToDb(data.role) as any }),
       },
     });
     return this.toDomain(member);
@@ -156,9 +156,27 @@ export class PrismaMemberRepository implements MemberRepository {
       id: m.id,
       groupId: m.groupId,
       userId: m.userId,
-      role: m.role.toLowerCase() as GroupRole,
+      role: this.mapRoleFromDb(m.role),
       joinedAt: m.joinedAt,
     };
+  }
+
+  private mapRoleToDb(role: string): string {
+    switch (role) {
+      case 'owner': return 'ADMIN';
+      case 'moderator': return 'MODERATOR';
+      case 'member': return 'MEMBER';
+      default: return 'MEMBER';
+    }
+  }
+
+  private mapRoleFromDb(dbRole: string): GroupRole {
+    switch (dbRole) {
+      case 'ADMIN': return 'owner';
+      case 'MODERATOR': return 'moderator';
+      case 'MEMBER': return 'member';
+      default: return 'member';
+    }
   }
 }
 

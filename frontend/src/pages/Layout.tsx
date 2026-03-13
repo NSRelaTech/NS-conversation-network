@@ -1,0 +1,132 @@
+import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
+import { Home, Users, User } from 'lucide-react';
+import { useAuthStore } from '@/stores/auth';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
+
+export function Layout() {
+  const { user, logout } = useAuthStore();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/auth/login');
+  };
+
+  const initials = user?.username?.slice(0, 2).toUpperCase() || '??';
+
+  const tabs = [
+    { path: '/', icon: Home, label: 'Feed' },
+    { path: '/groups', icon: Users, label: 'Groups' },
+    { path: `/users/${user?.id}`, icon: User, label: 'Profile' },
+  ];
+
+  return (
+    <div className="min-h-screen bg-stone-50 pb-16 lg:pb-0">
+      {/* Desktop top nav */}
+      <nav className="sticky top-0 z-50 border-b bg-white/95 backdrop-blur hidden lg:block">
+        <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
+          <div className="flex items-center gap-6">
+            <Link to="/" className="text-lg font-semibold text-stone-900">
+              Community
+            </Link>
+            <div className="flex gap-1">
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/">Feed</Link>
+              </Button>
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/groups">Groups</Link>
+              </Button>
+            </div>
+          </div>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="rounded-full">
+                <Avatar className="h-8 w-8">
+                  <AvatarFallback className="bg-stone-200 text-stone-600 text-xs">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => navigate(`/users/${user?.id}`)}>
+                Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate('/settings/profile')}>
+                Settings
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleLogout}>
+                Log out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </nav>
+
+      {/* Mobile top bar — logo + avatar only */}
+      <nav className="sticky top-0 z-50 border-b bg-white/95 backdrop-blur lg:hidden">
+        <div className="flex h-12 items-center justify-between px-4">
+          <Link to="/" className="text-lg font-semibold text-stone-900">
+            Community
+          </Link>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="rounded-full h-8 w-8">
+                <Avatar className="h-7 w-7">
+                  <AvatarFallback className="bg-stone-200 text-stone-600 text-xs">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => navigate('/settings/profile')}>
+                Settings
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleLogout}>
+                Log out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </nav>
+
+      {/* Content */}
+      <main className="mx-auto max-w-5xl px-4 py-4 lg:py-6">
+        <Outlet />
+      </main>
+
+      {/* Mobile bottom tab bar */}
+      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-white lg:hidden">
+        <div className="flex h-14 items-center justify-around">
+          {tabs.map(({ path, icon: Icon, label }) => {
+            const isActive = path === '/'
+              ? location.pathname === '/'
+              : location.pathname.startsWith(path);
+            return (
+              <Link
+                key={path}
+                to={path}
+                className={`flex flex-col items-center gap-0.5 px-3 py-1 ${
+                  isActive ? 'text-stone-900' : 'text-stone-400'
+                }`}
+              >
+                <Icon className="h-5 w-5" />
+                <span className="text-[10px] font-medium">{label}</span>
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
+    </div>
+  );
+}

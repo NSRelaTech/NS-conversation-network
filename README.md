@@ -2,22 +2,37 @@
 
 A community social network for Novi Sad residents, built by [NSRelaTech](https://github.com/NSRelaTech).
 
-Inspired by the [Conversation Networks](https://arxiv.org/abs/2503.11714) paper (Roy, Lessig, Tang 2025), which proposes digital infrastructure for civic communication — where quality comes from structured, facilitated conversations rather than algorithmic feeds.
+Built on ideas from three sources:
+- [Conversation Networks](https://arxiv.org/abs/2503.11714) (Roy, Lessig, Tang 2025) — civic communication infrastructure
+- [Decentralized Deliberation Standard](https://www.dds.xyz) (DDS) — open protocol for interoperable deliberation
+- [Plurality](https://github.com/pluralitybook/plurality) (Tang, Weyl) — plural governance and collaborative technology
 
 **Live app: [empathetic-stillness-production.up.railway.app](https://empathetic-stillness-production.up.railway.app)**
 
 ## Vision
 
-The long-term goal is to evolve from a traditional social network toward a conversation network — a platform where community members engage through structured dialogue, not just posts and likes.
+Evolving from a social network toward a conversation network — where community members engage through structured deliberation, not just posts and likes.
 
-Key principles from the paper guiding our direction:
+**Core principles:**
 
-- **Conversations over content** — meaningful community discourse, not engagement-optimized feeds
-- **Three forms of civic communication** — bridging (across divides), listening (leaders hearing authentic voices), deliberation (collective reasoning toward decisions)
-- **AI as assistive, never mediating** — technology should expand participation and reveal patterns, but never come between people
-- **Interoperability** — open standards that allow community tools to work together
+- **Conversations over content** — meaningful discourse, not engagement-optimized feeds
+- **AI as assistive, never mediating** — technology expands participation and reveals patterns, but never comes between people
+- **Interoperability** — open standards (DDS, AT Protocol) that allow deliberation tools to work together
+- **Plural governance** — decision-making mechanisms that respect diverse perspectives
 
-The current MVP establishes the social foundation. Future iterations will introduce facilitated group conversations, structured deliberation flows, and conversation-first features.
+## Roadmap
+
+The current MVP establishes the social foundation. The roadmap builds toward decentralized civic infrastructure:
+
+| Phase | Focus | Key deliverable |
+|-------|-------|-----------------|
+| **0** | Tech debt cleanup | Prisma-only data access, TS strict fixes |
+| **1** | Decentralized identity | DID:PLC identity with AT Protocol, GitHub OAuth, and wallet sign-in |
+| **2** | Structured conversations | DDS-aligned deliberation in groups (Plan/Collect/Analyze) |
+| **3** | DDS interop | AT Protocol records, external tool integration, federation |
+| **4** | Plural governance | Quadratic voting, ranked choice, quadratic funding |
+
+See [`docs/2026-03-13-roadmap-design.md`](docs/2026-03-13-roadmap-design.md) for the full roadmap spec.
 
 ## Current Features
 
@@ -106,6 +121,8 @@ Open to contributions from the NSRelaTech community. Fork, branch, PR.
 ## References
 
 - Roy, D., Lessig, L., & Tang, A. (2025). *Conversation Networks*. arXiv:2503.11714. https://arxiv.org/abs/2503.11714
+- Decentralized Deliberation Standard. https://www.dds.xyz
+- Tang, A., & Weyl, E. G. *Plurality: The Future of Collaborative Technology and Democracy*. https://github.com/pluralitybook/plurality
 
 ## License
 

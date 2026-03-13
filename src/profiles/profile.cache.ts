@@ -11,12 +11,19 @@ import { UserProfile, CacheConfig } from './profile.types';
 const DEFAULT_TTL = 300; // 5 minutes in seconds
 
 export class ProfileCache {
-  private redis: Redis;
+  private redis: Redis | null;
   private keyPrefix: string;
   private ttl: number;
 
-  constructor(redis?: Redis, config?: Partial<CacheConfig>) {
-    this.redis = redis || new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
+  constructor(redis?: Redis | null, config?: Partial<CacheConfig>) {
+    // Only connect to Redis if explicitly provided or REDIS_URL is set
+    if (redis) {
+      this.redis = redis;
+    } else if (process.env.REDIS_URL) {
+      this.redis = new Redis(process.env.REDIS_URL);
+    } else {
+      this.redis = null;
+    }
     this.keyPrefix = 'profile:';
     this.ttl = config?.profileTtl || DEFAULT_TTL;
   }
@@ -32,6 +39,7 @@ export class ProfileCache {
    * Get profile from cache
    */
   async get(userId: number): Promise<UserProfile | null> {
+    if (!this.redis) return null;
     try {
       const cached = await this.redis.get(this.getKey(userId));
       if (cached) {
@@ -55,6 +63,7 @@ export class ProfileCache {
    * Set profile in cache
    */
   async set(userId: number, profile: UserProfile, ttl?: number): Promise<void> {
+    if (!this.redis) return;
     try {
       const key = this.getKey(userId);
       const value = JSON.stringify(profile);
@@ -69,6 +78,7 @@ export class ProfileCache {
    * Invalidate profile cache
    */
   async invalidate(userId: number): Promise<void> {
+    if (!this.redis) return;
     try {
       await this.redis.del(this.getKey(userId));
     } catch (error) {
@@ -80,6 +90,7 @@ export class ProfileCache {
    * Invalidate multiple profiles by pattern
    */
   async invalidatePattern(pattern: string): Promise<void> {
+    if (!this.redis) return;
     try {
       const keys = await this.redis.keys(`${this.keyPrefix}${pattern}`);
       if (keys.length > 0) {

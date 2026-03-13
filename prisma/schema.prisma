@@ -23,7 +23,7 @@ model User {
   isVerified    Boolean   @default(false) @map("is_verified")
   role          UserRole  @default(USER)
   createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
   lastLoginAt   DateTime? @map("last_login_at") @db.Timestamptz
   deletedAt     DateTime? @map("deleted_at") @db.Timestamptz
 
@@ -63,7 +63,7 @@ model UserProfile {
   dateOfBirth  DateTime? @map("date_of_birth") @db.Date
   isPrivate    Boolean   @default(false) @map("is_private")
   createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -96,7 +96,7 @@ model Post {
   isEdited       Boolean       @default(false) @map("is_edited")
   isPinned       Boolean       @default(false) @map("is_pinned")
   createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt      DateTime      @updatedAt @map("updated_at") @db.Timestamptz
+  updatedAt      DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
   deletedAt      DateTime?     @map("deleted_at") @db.Timestamptz
 
   // Relations
@@ -162,7 +162,7 @@ model Comment {
   replyCount      Int       @default(0) @map("reply_count")
   isEdited        Boolean   @default(false) @map("is_edited")
   createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
   deletedAt       DateTime? @map("deleted_at") @db.Timestamptz
 
   // Relations
@@ -213,7 +213,7 @@ model Group {
   postCount    Int            @default(0) @map("post_count")
   isActive     Boolean        @default(true) @map("is_active")
   createdAt    DateTime       @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt    DateTime       @updatedAt @map("updated_at") @db.Timestamptz
+  updatedAt    DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
   deletedAt    DateTime?      @map("deleted_at") @db.Timestamptz
 
   // Relations
@@ -240,7 +240,7 @@ model GroupMember {
   userId    String          @map("user_id") @db.Uuid
   role      GroupMemberRole @default(MEMBER)
   joinedAt  DateTime        @default(now()) @map("joined_at") @db.Timestamptz
-  updatedAt DateTime        @updatedAt @map("updated_at") @db.Timestamptz
+  updatedAt DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
@@ -269,7 +269,7 @@ model Follow {
   followingId String       @map("following_id") @db.Uuid
   status      FollowStatus @default(ACCEPTED)
   createdAt   DateTime     @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt   DateTime     @updatedAt @map("updated_at") @db.Timestamptz
+  updatedAt   DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   follower  User @relation("Followers", fields: [followerId], references: [id], onDelete: Cascade)

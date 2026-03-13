@@ -20,7 +20,7 @@ export class PrismaGroupRepository implements GroupRepository {
         description: data.description || null,
         ownerId: data.ownerId!,
         privacy: (data.privacy?.toUpperCase() || 'PUBLIC') as any,
-        memberCount: 0,
+        memberCount: data.memberCount ?? 0,
         postCount: 0,
       },
     });
@@ -96,6 +96,7 @@ export class PrismaGroupRepository implements GroupRepository {
       coverUrl: g.coverUrl,
       avatarUrl: g.avatarUrl,
       isActive: g.isActive,
+      status: g.deletedAt ? 'deleted' : g.isActive ? 'active' : 'archived',
       createdAt: g.createdAt,
       updatedAt: g.updatedAt,
     };
@@ -157,6 +158,7 @@ export class PrismaMemberRepository implements MemberRepository {
       groupId: m.groupId,
       userId: m.userId,
       role: this.mapRoleFromDb(m.role),
+      status: 'active',
       joinedAt: m.joinedAt,
     };
   }

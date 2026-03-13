@@ -30,7 +30,7 @@ export class FollowRepository {
     const query = `
       SELECT following_id AS "followingId"
       FROM follows
-      WHERE follower_id = $1 AND status = 'active'
+      WHERE follower_id = $1 AND status = 'ACCEPTED'
     `;
 
     const result = await this.pool.query(query, [userId]);
@@ -44,7 +44,7 @@ export class FollowRepository {
     const query = `
       SELECT follower_id AS "followerId"
       FROM follows
-      WHERE following_id = $1 AND status = 'active'
+      WHERE following_id = $1 AND status = 'ACCEPTED'
     `;
 
     const result = await this.pool.query(query, [userId]);
@@ -58,7 +58,7 @@ export class FollowRepository {
     const query = `
       SELECT 1
       FROM follows
-      WHERE follower_id = $1 AND following_id = $2 AND status = 'active'
+      WHERE follower_id = $1 AND following_id = $2 AND status = 'ACCEPTED'
       LIMIT 1
     `;
 
@@ -72,9 +72,9 @@ export class FollowRepository {
   async create(followerId: string, followingId: string): Promise<Follow> {
     const query = `
       INSERT INTO follows (follower_id, following_id, status)
-      VALUES ($1, $2, 'active')
+      VALUES ($1, $2, 'ACCEPTED')
       ON CONFLICT (follower_id, following_id)
-      DO UPDATE SET status = 'active'
+      DO UPDATE SET status = 'ACCEPTED'
       RETURNING
         follower_id AS "followerId",
         following_id AS "followingId",
@@ -83,7 +83,7 @@ export class FollowRepository {
     `;
 
     const result = await this.pool.query(query, [followerId, followingId]);
-    return result.rows[0];
+    return { ...result.rows[0], status: 'active' };
   }
 
   /**
@@ -106,7 +106,7 @@ export class FollowRepository {
     const query = `
       SELECT COUNT(*) as count
       FROM follows
-      WHERE following_id = $1 AND status = 'active'
+      WHERE following_id = $1 AND status = 'ACCEPTED'
     `;
 
     const result = await this.pool.query(query, [userId]);
@@ -120,7 +120,7 @@ export class FollowRepository {
     const query = `
       SELECT COUNT(*) as count
       FROM follows
-      WHERE follower_id = $1 AND status = 'active'
+      WHERE follower_id = $1 AND status = 'ACCEPTED'
     `;
 
     const result = await this.pool.query(query, [userId]);

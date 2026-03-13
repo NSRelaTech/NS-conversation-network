@@ -13,7 +13,6 @@ export interface GroupMember {
   groupId: string;
   userId: string;
   role: 'owner' | 'moderator' | 'member';
-  status: 'active' | 'pending' | 'banned';
   joinedAt: Date;
 }
 
@@ -31,7 +30,7 @@ export class GroupMemberRepository {
     const query = `
       SELECT group_id AS "groupId"
       FROM group_members
-      WHERE user_id = $1 AND status = 'active'
+      WHERE user_id = $1
     `;
 
     const result = await this.pool.query(query, [userId]);
@@ -45,7 +44,7 @@ export class GroupMemberRepository {
     const query = `
       SELECT 1
       FROM group_members
-      WHERE group_id = $1 AND user_id = $2 AND status = 'active'
+      WHERE group_id = $1 AND user_id = $2
       LIMIT 1
     `;
 
@@ -65,14 +64,17 @@ export class GroupMemberRepository {
         group_id AS "groupId",
         user_id AS "userId",
         role,
-        status,
         joined_at AS "joinedAt"
       FROM group_members
       WHERE group_id = $1 AND user_id = $2
     `;
 
     const result = await this.pool.query(query, [groupId, userId]);
-    return result.rows[0] || null;
+    if (!result.rows[0]) return null;
+    return {
+      ...result.rows[0],
+      role: this.mapRoleFromDb(result.rows[0].role),
+    };
   }
 
   /**
@@ -83,19 +85,22 @@ export class GroupMemberRepository {
     userId: string,
     role: 'owner' | 'moderator' | 'member' = 'member'
   ): Promise<GroupMember> {
+    const dbRole = this.mapRoleToDb(role);
     const query = `
-      INSERT INTO group_members (group_id, user_id, role, status)
-      VALUES ($1, $2, $3, 'active')
+      INSERT INTO group_members (group_id, user_id, role)
+      VALUES ($1, $2, $3::"GroupMemberRole")
       RETURNING
         group_id AS "groupId",
         user_id AS "userId",
         role,
-        status,
         joined_at AS "joinedAt"
     `;
 
-    const result = await this.pool.query(query, [groupId, userId, role]);
-    return result.rows[0];
+    const result = await this.pool.query(query, [groupId, userId, dbRole]);
+    return {
+      ...result.rows[0],
+      role: this.mapRoleFromDb(result.rows[0].role),
+    };
   }
 
   /**
@@ -119,44 +124,23 @@ export class GroupMemberRepository {
     userId: string,
     role: 'owner' | 'moderator' | 'member'
   ): Promise<GroupMember> {
+    const dbRole = this.mapRoleToDb(role);
     const query = `
       UPDATE group_members
-      SET role = $3
+      SET role = $3::"GroupMemberRole"
       WHERE group_id = $1 AND user_id = $2
       RETURNING
         group_id AS "groupId",
         user_id AS "userId",
         role,
-        status,
         joined_at AS "joinedAt"
     `;
 
-    const result = await this.pool.query(query, [groupId, userId, role]);
-    return result.rows[0];
-  }
-
-  /**
-   * Update member's status (ban/unban)
-   */
-  async updateStatus(
-    groupId: string,
-    userId: string,
-    status: 'active' | 'pending' | 'banned'
-  ): Promise<GroupMember> {
-    const query = `
-      UPDATE group_members
-      SET status = $3
-      WHERE group_id = $1 AND user_id = $2
-      RETURNING
-        group_id AS "groupId",
-        user_id AS "userId",
-        role,
-        status,
-        joined_at AS "joinedAt"
-    `;
-
-    const result = await this.pool.query(query, [groupId, userId, status]);
-    return result.rows[0];
+    const result = await this.pool.query(query, [groupId, userId, dbRole]);
+    return {
+      ...result.rows[0],
+      role: this.mapRoleFromDb(result.rows[0].role),
+    };
   }
 
   /**
@@ -166,7 +150,7 @@ export class GroupMemberRepository {
     const query = `
       SELECT COUNT(*) as count
       FROM group_members
-      WHERE group_id = $1 AND status = 'active'
+      WHERE group_id = $1
     `;
 
     const result = await this.pool.query(query, [groupId]);
@@ -186,14 +170,13 @@ export class GroupMemberRepository {
         group_id AS "groupId",
         user_id AS "userId",
         role,
-        status,
         joined_at AS "joinedAt"
       FROM group_members
-      WHERE group_id = $1 AND status = 'active'
+      WHERE group_id = $1
       ORDER BY
         CASE role
-          WHEN 'owner' THEN 1
-          WHEN 'moderator' THEN 2
+          WHEN 'ADMIN' THEN 1
+          WHEN 'MODERATOR' THEN 2
           ELSE 3
         END,
         joined_at ASC
@@ -201,6 +184,27 @@ export class GroupMemberRepository {
     `;
 
     const result = await this.pool.query(query, [groupId, limit, offset]);
-    return result.rows;
+    return result.rows.map((row) => ({
+      ...row,
+      role: this.mapRoleFromDb(row.role),
+    }));
+  }
+
+  private mapRoleToDb(role: 'owner' | 'moderator' | 'member'): string {
+    switch (role) {
+      case 'owner': return 'ADMIN';
+      case 'moderator': return 'MODERATOR';
+      case 'member': return 'MEMBER';
+      default: return 'MEMBER';
+    }
+  }
+
+  private mapRoleFromDb(dbRole: string): 'owner' | 'moderator' | 'member' {
+    switch (dbRole) {
+      case 'ADMIN': return 'owner';
+      case 'MODERATOR': return 'moderator';
+      case 'MEMBER': return 'member';
+      default: return 'member';
+    }
   }
 }

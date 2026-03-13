@@ -29,14 +29,18 @@ export class ReactionRepository {
         id,
         user_id AS "userId",
         post_id AS "postId",
-        reaction_type AS "type",
+        type,
         created_at AS "createdAt"
-      FROM reactions
+      FROM post_reactions
       WHERE user_id = $1 AND post_id = $2
     `;
 
     const result = await this.pool.query(query, [userId, postId]);
-    return result.rows[0] || null;
+    if (!result.rows[0]) return null;
+    return {
+      ...result.rows[0],
+      type: result.rows[0].type.toLowerCase(),
+    };
   }
 
   /**
@@ -57,32 +61,36 @@ export class ReactionRepository {
     postId: string;
     type: ReactionType;
   }): Promise<Reaction> {
+    const dbType = input.type.toUpperCase();
     const query = `
-      INSERT INTO reactions (user_id, post_id, reaction_type)
-      VALUES ($1, $2, $3)
-      ON CONFLICT (user_id, post_id)
-      DO UPDATE SET reaction_type = EXCLUDED.reaction_type
+      INSERT INTO post_reactions (post_id, user_id, type)
+      VALUES ($2, $1, $3::"ReactionType")
+      ON CONFLICT (post_id, user_id)
+      DO UPDATE SET type = EXCLUDED.type
       RETURNING
         id,
         user_id AS "userId",
         post_id AS "postId",
-        reaction_type AS "type",
+        type,
         created_at AS "createdAt"
     `;
 
     const result = await this.pool.query(query, [
       input.userId,
       input.postId,
-      input.type,
+      dbType,
     ]);
-    return result.rows[0];
+    return {
+      ...result.rows[0],
+      type: result.rows[0].type.toLowerCase(),
+    };
   }
 
   /**
    * Delete a reaction
    */
   async delete(id: string): Promise<boolean> {
-    const query = `DELETE FROM reactions WHERE id = $1`;
+    const query = `DELETE FROM post_reactions WHERE id = $1`;
     const result = await this.pool.query(query, [id]);
     return (result.rowCount ?? 0) > 0;
   }
@@ -93,14 +101,14 @@ export class ReactionRepository {
   async getReactionCounts(postId: string): Promise<ReactionCounts> {
     const query = `
       SELECT
-        COALESCE(SUM(CASE WHEN reaction_type = 'like' THEN 1 ELSE 0 END), 0) AS like,
-        COALESCE(SUM(CASE WHEN reaction_type = 'love' THEN 1 ELSE 0 END), 0) AS love,
-        COALESCE(SUM(CASE WHEN reaction_type = 'laugh' THEN 1 ELSE 0 END), 0) AS laugh,
-        COALESCE(SUM(CASE WHEN reaction_type = 'wow' THEN 1 ELSE 0 END), 0) AS wow,
-        COALESCE(SUM(CASE WHEN reaction_type = 'sad' THEN 1 ELSE 0 END), 0) AS sad,
-        COALESCE(SUM(CASE WHEN reaction_type = 'angry' THEN 1 ELSE 0 END), 0) AS angry,
+        COALESCE(SUM(CASE WHEN type = 'LIKE' THEN 1 ELSE 0 END), 0) AS like,
+        COALESCE(SUM(CASE WHEN type = 'LOVE' THEN 1 ELSE 0 END), 0) AS love,
+        COALESCE(SUM(CASE WHEN type = 'HAHA' THEN 1 ELSE 0 END), 0) AS laugh,
+        COALESCE(SUM(CASE WHEN type = 'WOW' THEN 1 ELSE 0 END), 0) AS wow,
+        COALESCE(SUM(CASE WHEN type = 'SAD' THEN 1 ELSE 0 END), 0) AS sad,
+        COALESCE(SUM(CASE WHEN type = 'ANGRY' THEN 1 ELSE 0 END), 0) AS angry,
         COUNT(*) AS total
-      FROM reactions
+      FROM post_reactions
       WHERE post_id = $1
     `;
 
@@ -132,23 +140,26 @@ export class ReactionRepository {
         id,
         user_id AS "userId",
         post_id AS "postId",
-        reaction_type AS "type",
+        type,
         created_at AS "createdAt"
-      FROM reactions
+      FROM post_reactions
       WHERE post_id = $1
     `;
 
     const values: unknown[] = [postId];
 
     if (type) {
-      query += ` AND reaction_type = $2`;
-      values.push(type);
+      query += ` AND type = $2::"ReactionType"`;
+      values.push(type.toUpperCase());
     }
 
     query += ` ORDER BY created_at DESC LIMIT $${values.length + 1} OFFSET $${values.length + 2}`;
     values.push(limit, offset);
 
     const result = await this.pool.query(query, values);
-    return result.rows;
+    return result.rows.map((row) => ({
+      ...row,
+      type: row.type.toLowerCase(),
+    }));
   }
 }

@@ -23,7 +23,7 @@ export class FeedRepository {
    * Uses cursor-based pagination
    */
   async getHomeFeed(query: FeedQuery): Promise<FeedItem[]> {
-    const { userId, followingIds, groupIds, cursor, limit } = query;
+    const { followingIds, groupIds, cursor, limit } = query;
 
     // Handle empty following and groups
     if (
@@ -74,31 +74,30 @@ export class FeedRepository {
         p.content,
         p.group_id AS "groupId",
         p.visibility,
-        p.status,
         p.created_at AS "createdAt",
         p.updated_at AS "updatedAt",
-        p.likes_count AS "likesCount",
-        p.comments_count AS "commentsCount",
-        p.shares_count AS "sharesCount",
+        p.reaction_count AS "likesCount",
+        p.comment_count AS "commentsCount",
+        p.share_count AS "sharesCount",
         p.is_pinned AS "isPinned",
-        p.is_deleted AS "isDeleted",
+        p.deleted_at AS "deletedAt",
         p.media_urls AS "mediaUrls",
         json_build_object(
           'id', u.id,
           'username', u.username,
-          'profilePictureUrl', u.profile_picture_url
+          'profilePictureUrl', up.avatar_url
         ) AS author,
         CASE
           WHEN g.id IS NOT NULL THEN json_build_object('id', g.id, 'name', g.name)
           ELSE NULL
         END AS group,
-        (p.likes_count + p.comments_count * 2) AS "engagementScore"
+        (p.reaction_count + p.comment_count * 2) AS "engagementScore"
       FROM posts p
       INNER JOIN users u ON p.author_id = u.id
+      LEFT JOIN user_profiles up ON u.id = up.user_id
       LEFT JOIN groups g ON p.group_id = g.id
       WHERE
-        p.status = 'published'
-        AND p.is_deleted = false
+        p.deleted_at IS NULL
         AND p.created_at < $${cursorParamIndex}
         AND ${sourceCondition}
       ORDER BY
@@ -108,7 +107,11 @@ export class FeedRepository {
     `;
 
     const result = await this.pool.query(sql, values);
-    return result.rows;
+    return result.rows.map((row) => ({
+      ...row,
+      isDeleted: false,
+      status: 'published' as const,
+    }));
   }
 
   /**
@@ -126,29 +129,28 @@ export class FeedRepository {
         p.content,
         p.group_id AS "groupId",
         p.visibility,
-        p.status,
         p.created_at AS "createdAt",
         p.updated_at AS "updatedAt",
-        p.likes_count AS "likesCount",
-        p.comments_count AS "commentsCount",
-        p.shares_count AS "sharesCount",
+        p.reaction_count AS "likesCount",
+        p.comment_count AS "commentsCount",
+        p.share_count AS "sharesCount",
         p.is_pinned AS "isPinned",
-        p.is_deleted AS "isDeleted",
+        p.deleted_at AS "deletedAt",
         p.media_urls AS "mediaUrls",
         json_build_object(
           'id', u.id,
           'username', u.username,
-          'profilePictureUrl', u.profile_picture_url
+          'profilePictureUrl', up.avatar_url
         ) AS author,
         json_build_object('id', g.id, 'name', g.name) AS group,
-        (p.likes_count + p.comments_count * 2) AS "engagementScore"
+        (p.reaction_count + p.comment_count * 2) AS "engagementScore"
       FROM posts p
       INNER JOIN users u ON p.author_id = u.id
+      LEFT JOIN user_profiles up ON u.id = up.user_id
       INNER JOIN groups g ON p.group_id = g.id
       WHERE
         p.group_id = $1
-        AND p.status = 'published'
-        AND p.is_deleted = false
+        AND p.deleted_at IS NULL
         AND p.created_at < $2
       ORDER BY
         p.is_pinned DESC,
@@ -157,7 +159,11 @@ export class FeedRepository {
     `;
 
     const result = await this.pool.query(sql, [groupId, cursorTimestamp, limit]);
-    return result.rows;
+    return result.rows.map((row) => ({
+      ...row,
+      isDeleted: false,
+      status: 'published' as const,
+    }));
   }
 
   /**
@@ -175,33 +181,32 @@ export class FeedRepository {
         p.content,
         p.group_id AS "groupId",
         p.visibility,
-        p.status,
         p.created_at AS "createdAt",
         p.updated_at AS "updatedAt",
-        p.likes_count AS "likesCount",
-        p.comments_count AS "commentsCount",
-        p.shares_count AS "sharesCount",
+        p.reaction_count AS "likesCount",
+        p.comment_count AS "commentsCount",
+        p.share_count AS "sharesCount",
         p.is_pinned AS "isPinned",
-        p.is_deleted AS "isDeleted",
+        p.deleted_at AS "deletedAt",
         p.media_urls AS "mediaUrls",
         json_build_object(
           'id', u.id,
           'username', u.username,
-          'profilePictureUrl', u.profile_picture_url
+          'profilePictureUrl', up.avatar_url
         ) AS author,
         CASE
           WHEN g.id IS NOT NULL THEN json_build_object('id', g.id, 'name', g.name)
           ELSE NULL
         END AS group,
-        (p.likes_count + p.comments_count * 2) AS "engagementScore"
+        (p.reaction_count + p.comment_count * 2) AS "engagementScore"
       FROM posts p
       INNER JOIN users u ON p.author_id = u.id
+      LEFT JOIN user_profiles up ON u.id = up.user_id
       LEFT JOIN groups g ON p.group_id = g.id
       WHERE
         p.author_id = $1
-        AND p.status = 'published'
-        AND p.is_deleted = false
-        AND p.visibility IN ('public', 'group')
+        AND p.deleted_at IS NULL
+        AND p.visibility IN ('PUBLIC', 'GROUP')
         AND p.created_at < $2
       ORDER BY
         p.is_pinned DESC,
@@ -210,6 +215,10 @@ export class FeedRepository {
     `;
 
     const result = await this.pool.query(sql, [userId, cursorTimestamp, limit]);
-    return result.rows;
+    return result.rows.map((row) => ({
+      ...row,
+      isDeleted: false,
+      status: 'published' as const,
+    }));
   }
 }

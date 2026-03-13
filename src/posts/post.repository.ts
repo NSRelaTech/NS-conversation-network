@@ -26,36 +26,35 @@ export class PostRepository {
    * Create a new post
    */
   async create(input: CreatePostInput): Promise<Post> {
+    const visibility = (input.visibility || 'public').toUpperCase();
+
     const query = `
       INSERT INTO posts (
         author_id,
         content,
         group_id,
         visibility,
-        status,
-        scheduled_at,
         media_urls,
-        likes_count,
-        comments_count,
-        shares_count,
+        reaction_count,
+        comment_count,
+        share_count,
         is_pinned,
-        is_deleted
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, 0, 0, 0, false, false)
+        is_edited
+      ) VALUES ($1, $2, $3, $4::"PostVisibility", $5, 0, 0, 0, false, false)
       RETURNING
         id,
         author_id AS "authorId",
         content,
         group_id AS "groupId",
         visibility,
-        status,
-        scheduled_at AS "scheduledAt",
         created_at AS "createdAt",
         updated_at AS "updatedAt",
-        likes_count AS "likesCount",
-        comments_count AS "commentsCount",
-        shares_count AS "sharesCount",
+        reaction_count AS "likesCount",
+        comment_count AS "commentsCount",
+        share_count AS "sharesCount",
         is_pinned AS "isPinned",
-        is_deleted AS "isDeleted",
+        is_edited AS "isEdited",
+        deleted_at AS "deletedAt",
         media_urls AS "mediaUrls"
     `;
 
@@ -63,14 +62,17 @@ export class PostRepository {
       input.authorId,
       input.content,
       input.groupId || null,
-      input.visibility || 'public',
-      input.scheduledAt ? 'scheduled' : 'published',
-      input.scheduledAt || null,
+      visibility,
       input.mediaUrls || [],
     ];
 
     const result = await this.pool.query(query, values);
-    return result.rows[0];
+    const row = result.rows[0];
+    return {
+      ...row,
+      isDeleted: row.deletedAt != null,
+      status: 'published',
+    };
   }
 
   /**
@@ -84,22 +86,27 @@ export class PostRepository {
         content,
         group_id AS "groupId",
         visibility,
-        status,
-        scheduled_at AS "scheduledAt",
         created_at AS "createdAt",
         updated_at AS "updatedAt",
-        likes_count AS "likesCount",
-        comments_count AS "commentsCount",
-        shares_count AS "sharesCount",
+        reaction_count AS "likesCount",
+        comment_count AS "commentsCount",
+        share_count AS "sharesCount",
         is_pinned AS "isPinned",
-        is_deleted AS "isDeleted",
+        is_edited AS "isEdited",
+        deleted_at AS "deletedAt",
         media_urls AS "mediaUrls"
       FROM posts
       WHERE id = $1
     `;
 
     const result = await this.pool.query(query, [id]);
-    return result.rows[0] || null;
+    if (!result.rows[0]) return null;
+    const row = result.rows[0];
+    return {
+      ...row,
+      isDeleted: row.deletedAt != null,
+      status: 'published',
+    };
   }
 
   /**
@@ -113,20 +120,19 @@ export class PostRepository {
         p.content,
         p.group_id AS "groupId",
         p.visibility,
-        p.status,
-        p.scheduled_at AS "scheduledAt",
         p.created_at AS "createdAt",
         p.updated_at AS "updatedAt",
-        p.likes_count AS "likesCount",
-        p.comments_count AS "commentsCount",
-        p.shares_count AS "sharesCount",
+        p.reaction_count AS "likesCount",
+        p.comment_count AS "commentsCount",
+        p.share_count AS "sharesCount",
         p.is_pinned AS "isPinned",
-        p.is_deleted AS "isDeleted",
+        p.is_edited AS "isEdited",
+        p.deleted_at AS "deletedAt",
         p.media_urls AS "mediaUrls",
         json_build_object(
           'id', u.id,
           'username', u.username,
-          'profilePictureUrl', u.profile_picture_url
+          'profilePictureUrl', up.avatar_url
         ) AS author,
         CASE
           WHEN g.id IS NOT NULL THEN json_build_object('id', g.id, 'name', g.name)
@@ -134,12 +140,19 @@ export class PostRepository {
         END AS group
       FROM posts p
       INNER JOIN users u ON p.author_id = u.id
+      LEFT JOIN user_profiles up ON u.id = up.user_id
       LEFT JOIN groups g ON p.group_id = g.id
       WHERE p.id = $1
     `;
 
     const result = await this.pool.query(query, [id]);
-    return result.rows[0] || null;
+    if (!result.rows[0]) return null;
+    const row = result.rows[0];
+    return {
+      ...row,
+      isDeleted: row.deletedAt != null,
+      status: 'published',
+    };
   }
 
   /**
@@ -156,8 +169,8 @@ export class PostRepository {
     }
 
     if (input.visibility !== undefined) {
-      updates.push(`visibility = $${paramIndex++}`);
-      values.push(input.visibility);
+      updates.push(`visibility = $${paramIndex++}::"PostVisibility"`);
+      values.push(input.visibility.toUpperCase());
     }
 
     if (input.mediaUrls !== undefined) {
@@ -166,6 +179,7 @@ export class PostRepository {
     }
 
     updates.push(`updated_at = CURRENT_TIMESTAMP`);
+    updates.push(`is_edited = true`);
     values.push(id);
 
     const query = `
@@ -178,20 +192,24 @@ export class PostRepository {
         content,
         group_id AS "groupId",
         visibility,
-        status,
-        scheduled_at AS "scheduledAt",
         created_at AS "createdAt",
         updated_at AS "updatedAt",
-        likes_count AS "likesCount",
-        comments_count AS "commentsCount",
-        shares_count AS "sharesCount",
+        reaction_count AS "likesCount",
+        comment_count AS "commentsCount",
+        share_count AS "sharesCount",
         is_pinned AS "isPinned",
-        is_deleted AS "isDeleted",
+        is_edited AS "isEdited",
+        deleted_at AS "deletedAt",
         media_urls AS "mediaUrls"
     `;
 
     const result = await this.pool.query(query, values);
-    return result.rows[0];
+    const row = result.rows[0];
+    return {
+      ...row,
+      isDeleted: row.deletedAt != null,
+      status: 'published',
+    };
   }
 
   /**
@@ -200,7 +218,7 @@ export class PostRepository {
   async softDelete(id: string): Promise<Post> {
     const query = `
       UPDATE posts
-      SET is_deleted = true, updated_at = CURRENT_TIMESTAMP
+      SET deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
       WHERE id = $1
       RETURNING
         id,
@@ -208,20 +226,24 @@ export class PostRepository {
         content,
         group_id AS "groupId",
         visibility,
-        status,
-        scheduled_at AS "scheduledAt",
         created_at AS "createdAt",
         updated_at AS "updatedAt",
-        likes_count AS "likesCount",
-        comments_count AS "commentsCount",
-        shares_count AS "sharesCount",
+        reaction_count AS "likesCount",
+        comment_count AS "commentsCount",
+        share_count AS "sharesCount",
         is_pinned AS "isPinned",
-        is_deleted AS "isDeleted",
+        is_edited AS "isEdited",
+        deleted_at AS "deletedAt",
         media_urls AS "mediaUrls"
     `;
 
     const result = await this.pool.query(query, [id]);
-    return result.rows[0];
+    const row = result.rows[0];
+    return {
+      ...row,
+      isDeleted: true,
+      status: 'published',
+    };
   }
 
   /**
@@ -239,20 +261,18 @@ export class PostRepository {
         content,
         group_id AS "groupId",
         visibility,
-        status,
-        scheduled_at AS "scheduledAt",
         created_at AS "createdAt",
         updated_at AS "updatedAt",
-        likes_count AS "likesCount",
-        comments_count AS "commentsCount",
-        shares_count AS "sharesCount",
+        reaction_count AS "likesCount",
+        comment_count AS "commentsCount",
+        share_count AS "sharesCount",
         is_pinned AS "isPinned",
-        is_deleted AS "isDeleted",
+        is_edited AS "isEdited",
+        deleted_at AS "deletedAt",
         media_urls AS "mediaUrls"
       FROM posts
       WHERE author_id = $1
-        AND is_deleted = false
-        AND status = 'published'
+        AND deleted_at IS NULL
         ${cursor ? 'AND created_at < $3' : ''}
       ORDER BY created_at DESC
       LIMIT $2
@@ -260,7 +280,11 @@ export class PostRepository {
 
     const values = cursor ? [authorId, limit, cursor] : [authorId, limit];
     const result = await this.pool.query(query, values);
-    return result.rows;
+    return result.rows.map((row) => ({
+      ...row,
+      isDeleted: false,
+      status: 'published' as const,
+    }));
   }
 
   /**
@@ -278,20 +302,18 @@ export class PostRepository {
         content,
         group_id AS "groupId",
         visibility,
-        status,
-        scheduled_at AS "scheduledAt",
         created_at AS "createdAt",
         updated_at AS "updatedAt",
-        likes_count AS "likesCount",
-        comments_count AS "commentsCount",
-        shares_count AS "sharesCount",
+        reaction_count AS "likesCount",
+        comment_count AS "commentsCount",
+        share_count AS "sharesCount",
         is_pinned AS "isPinned",
-        is_deleted AS "isDeleted",
+        is_edited AS "isEdited",
+        deleted_at AS "deletedAt",
         media_urls AS "mediaUrls"
       FROM posts
       WHERE group_id = $1
-        AND is_deleted = false
-        AND status = 'published'
+        AND deleted_at IS NULL
         ${cursor ? 'AND created_at < $3' : ''}
       ORDER BY is_pinned DESC, created_at DESC
       LIMIT $2
@@ -299,54 +321,50 @@ export class PostRepository {
 
     const values = cursor ? [groupId, limit, cursor] : [groupId, limit];
     const result = await this.pool.query(query, values);
-    return result.rows;
+    return result.rows.map((row) => ({
+      ...row,
+      isDeleted: false,
+      status: 'published' as const,
+    }));
   }
 
   /**
-   * Increment likes count
+   * Increment reaction count
    */
   async incrementLikesCount(id: string): Promise<void> {
-    const query = `
-      UPDATE posts
-      SET likes_count = likes_count + 1
-      WHERE id = $1
-    `;
-    await this.pool.query(query, [id]);
+    await this.pool.query(
+      `UPDATE posts SET reaction_count = reaction_count + 1 WHERE id = $1`,
+      [id]
+    );
   }
 
   /**
-   * Decrement likes count
+   * Decrement reaction count
    */
   async decrementLikesCount(id: string): Promise<void> {
-    const query = `
-      UPDATE posts
-      SET likes_count = GREATEST(likes_count - 1, 0)
-      WHERE id = $1
-    `;
-    await this.pool.query(query, [id]);
+    await this.pool.query(
+      `UPDATE posts SET reaction_count = GREATEST(reaction_count - 1, 0) WHERE id = $1`,
+      [id]
+    );
   }
 
   /**
    * Increment comments count
    */
   async incrementCommentsCount(id: string): Promise<void> {
-    const query = `
-      UPDATE posts
-      SET comments_count = comments_count + 1
-      WHERE id = $1
-    `;
-    await this.pool.query(query, [id]);
+    await this.pool.query(
+      `UPDATE posts SET comment_count = comment_count + 1 WHERE id = $1`,
+      [id]
+    );
   }
 
   /**
    * Decrement comments count
    */
   async decrementCommentsCount(id: string): Promise<void> {
-    const query = `
-      UPDATE posts
-      SET comments_count = GREATEST(comments_count - 1, 0)
-      WHERE id = $1
-    `;
-    await this.pool.query(query, [id]);
+    await this.pool.query(
+      `UPDATE posts SET comment_count = GREATEST(comment_count - 1, 0) WHERE id = $1`,
+      [id]
+    );
   }
 }

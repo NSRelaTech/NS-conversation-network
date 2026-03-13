@@ -28,8 +28,8 @@ The current MVP establishes the social foundation. The roadmap builds toward dec
 |-------|-------|-----------------|
 | **0** | Tech debt cleanup | Prisma-only data access, TS strict fixes |
 | **1** | Decentralized identity | DID:PLC identity with AT Protocol, GitHub OAuth, and wallet sign-in |
-| **2** | Structured conversations | DDS-aligned deliberation in groups (Plan/Collect/Analyze) |
-| **3** | DDS interop | AT Protocol records, external tool integration, federation |
+| **2** | Structured conversations | DDS-aligned deliberation in groups, automatic cross-language translation |
+| **3** | DDS interop | AT Protocol records, external tool integration, federation, self-hosting |
 | **4** | Plural governance | Quadratic voting, ranked choice, quadratic funding |
 
 See [`docs/2026-03-13-roadmap-design.md`](docs/2026-03-13-roadmap-design.md) for the full roadmap spec.

@@ -102,6 +102,17 @@ Groups get a new content type: "conversations." A conversation is a structured d
 - Conversation view: round-by-round navigation, submit responses, see results
 - Group admins create and manage conversations
 
+### Automatic translation
+
+Novi Sad has Serbian, Russian, Hungarian, and other language communities. For cross-language deliberation to work, the platform must translate transparently:
+
+- All UI text localized (i18n framework — user picks language at registration or in settings)
+- Posts and conversation responses auto-translated to the reader's language on display
+- Original language preserved, translation shown with a "translated" indicator and option to see original
+- Conversation synthesis (Analyze layer) produced in each participant's language
+- Translation via LLM API (not machine translation) for quality — civic deliberation requires nuance
+- **AI as assistive**: translation enables participation without mediating the content. The human's words are preserved; the AI just makes them accessible across languages.
+
 ### Tool integration points
 
 - **Collect layer**: Harmonica, Polis, or other tools can replace native input UI — they gather responses their way, write to standardized format
@@ -135,6 +146,18 @@ Conversations, responses, and analyses become portable AT Protocol records. Exte
 - Other communities run their own instances
 - DID identity means no separate accounts per instance
 - **Cross-instance conversations (stretch goal):** AT Protocol federation replicates records but write authority stays with the originating PDS. A "conversation spanning instances" requires a clear ownership model — likely one instance hosts the conversation (Plan record), and participants from other instances submit responses via their own PDS which get aggregated. This needs a dedicated design spike and may be Phase 3b or later.
+
+### Self-hosting
+
+Communities should not depend on a single operator's server. Self-hosting is a first-class capability:
+
+- **One-command deploy**: Docker Compose setup with PostgreSQL + backend + frontend. `docker compose up` gets a community running.
+- **Configuration**: environment variables for database, identity provider, translation API key, domain
+- **No vendor lock-in**: all data stored locally in PostgreSQL, exportable. DID identity means users aren't locked to an instance.
+- **Documentation**: step-by-step guide for deploying on a VPS (Hetzner, DigitalOcean), Raspberry Pi, or a community's existing infrastructure
+- **Federation-ready**: self-hosted instances can federate with each other via AT Protocol once Phase 3 interop is complete
+
+This aligns with DDS's "sovereign" principle — communities choose their own providers and can leave freely.
 
 ### What changes from Phase 2
 

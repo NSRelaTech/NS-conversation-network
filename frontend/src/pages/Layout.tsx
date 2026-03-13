@@ -1,5 +1,5 @@
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
-import { Home, Users, User } from 'lucide-react';
+import { Home, Users, User, Github } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/stores/auth';
@@ -56,6 +56,15 @@ export function Layout() {
             </div>
           </div>
 
+          <div className="flex items-center gap-1">
+            <a
+              href="https://github.com/NSRelaTech/NS-conversation-network"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={buttonVariants({ variant: "ghost", size: "icon" })}
+            >
+              <Github className="h-5 w-5" />
+            </a>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="rounded-full">
@@ -79,6 +88,7 @@ export function Layout() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          </div>
         </div>
       </nav>
 

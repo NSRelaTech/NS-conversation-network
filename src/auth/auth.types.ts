@@ -48,6 +48,8 @@ export interface RegisterResponse {
   userId: string;
   email: string;
   message: string;
+  tokens?: AuthTokens;
+  user?: UserPublic;
 }
 
 export interface LoginResponse {

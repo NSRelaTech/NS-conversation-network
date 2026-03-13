@@ -131,11 +131,43 @@ export class AuthService {
       console.error('Failed to send verification email:', error);
     }
 
+    // Step 8: Auto-login — generate tokens for immediate use (MVP: users are auto-verified)
+    const accessToken = this.tokenManager.generateAccessToken({
+      userId: user.id,
+      email: user.email,
+      emailVerified: user.emailVerified,
+    });
+
+    const refreshToken = this.tokenManager.generateRefreshToken();
+    const refreshTokenHash = this.tokenManager.hashToken(refreshToken);
+    const refreshTokenExpiry = new Date(
+      Date.now() + this.config.refreshTokenExpiry * 1000
+    );
+
+    await this.tokenRepository.saveRefreshToken({
+      userId: user.id,
+      tokenHash: refreshTokenHash,
+      expiresAt: refreshTokenExpiry,
+      isRevoked: false,
+      createdAt: new Date(),
+      lastUsedAt: new Date(),
+      ipAddress: 'registration',
+      userAgent: 'registration',
+    });
+
+    const tokens: AuthTokens = {
+      accessToken,
+      refreshToken,
+      expiresIn: this.config.accessTokenExpiry,
+    };
+
     return {
       success: true,
       userId: user.id,
       email: user.email,
-      message: 'Registration successful. Please check your email to verify your account.',
+      message: 'Registration successful.',
+      tokens,
+      user: this.toPublicUser(user),
     };
   }
 

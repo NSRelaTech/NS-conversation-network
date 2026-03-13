@@ -40,12 +40,12 @@ export function RegisterPage() {
           password: data.password,
         }),
       }),
-    onSuccess: (data) => {
-      // MVP: auto-verified, so log in directly if tokens returned
+    onSuccess: (data, variables) => {
+      // MVP: auto-verified, so log in directly with returned tokens
       if (data.tokens) {
         setAuth(
           { accessToken: data.tokens.accessToken, refreshToken: data.tokens.refreshToken },
-          { id: data.userId, email: data.email, username: data.username }
+          { id: data.userId, email: data.email, username: variables.username }
         );
         navigate('/');
       } else {

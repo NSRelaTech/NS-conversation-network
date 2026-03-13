@@ -3,7 +3,7 @@ import { MapPin, LinkIcon } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth';
 import { FollowButton } from '@/components/social/FollowButton';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 
 interface Profile {
   userId: string;
@@ -39,9 +39,9 @@ export function ProfileHeader({ profile }: { profile: Profile }) {
               <h1 className="text-xl font-semibold text-stone-900">{displayName}</h1>
             </div>
             {isOwnProfile ? (
-              <Button variant="outline" size="sm" asChild>
-                <Link to="/settings/profile">Edit</Link>
-              </Button>
+              <Link to="/settings/profile" className={buttonVariants({ variant: "outline", size: "sm" })}>
+                Edit
+              </Link>
             ) : (
               <FollowButton userId={profile.userId} isFollowing={profile.isFollowing ?? false} />
             )}

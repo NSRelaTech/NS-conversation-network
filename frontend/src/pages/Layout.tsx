@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 
 export function Layout() {
   const { user, logout } = useAuthStore();
@@ -38,12 +38,12 @@ export function Layout() {
               Community
             </Link>
             <div className="flex gap-1">
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/">Feed</Link>
-              </Button>
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/groups">Groups</Link>
-              </Button>
+              <Link to="/" className={buttonVariants({ variant: "ghost", size: "sm" })}>
+                Feed
+              </Link>
+              <Link to="/groups" className={buttonVariants({ variant: "ghost", size: "sm" })}>
+                Groups
+              </Link>
             </div>
           </div>
 

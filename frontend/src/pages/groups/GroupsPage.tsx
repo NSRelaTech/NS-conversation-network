@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { api } from '@/lib/api';
 import { GroupCard } from '@/components/groups/GroupCard';
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 interface GroupsResponse {
@@ -34,12 +34,10 @@ export function GroupsPage() {
           onChange={(e) => setSearch(e.target.value)}
           className="max-w-sm"
         />
-        <Button asChild size="sm">
-          <Link to="/groups/create">
-            <Plus className="h-4 w-4 mr-1" />
-            New group
-          </Link>
-        </Button>
+        <Link to="/groups/create" className={buttonVariants({ size: "sm" })}>
+          <Plus className="h-4 w-4 mr-1" />
+          New group
+        </Link>
       </div>
 
       {isLoading && <p className="text-center text-stone-400 py-8">Loading groups...</p>}

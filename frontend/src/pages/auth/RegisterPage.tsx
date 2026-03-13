@@ -11,9 +11,17 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 const registerSchema = z.object({
-  username: z.string().min(3, 'Username must be at least 3 characters'),
+  username: z.string()
+    .min(3, 'Username must be at least 3 characters')
+    .max(50, 'Username must be at most 50 characters')
+    .regex(/^[a-zA-Z0-9_-]+$/, 'Only letters, numbers, underscores, and hyphens'),
   email: z.string().email('Invalid email'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  password: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[a-z]/, 'Must include a lowercase letter')
+    .regex(/[A-Z]/, 'Must include an uppercase letter')
+    .regex(/\d/, 'Must include a number')
+    .regex(/[@$!%*?&]/, 'Must include a special character (@$!%*?&)'),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Passwords do not match',
@@ -71,6 +79,7 @@ export function RegisterPage() {
         <div className="space-y-2">
           <Label htmlFor="password">Password</Label>
           <Input id="password" type="password" {...register('password')} />
+          <p className="text-xs text-stone-400">Min 8 chars, upper + lowercase, number, special (@$!%*?&amp;)</p>
           {errors.password && <p className="text-sm text-red-500">{errors.password.message}</p>}
         </div>
         <div className="space-y-2">
@@ -79,7 +88,11 @@ export function RegisterPage() {
           {errors.confirmPassword && <p className="text-sm text-red-500">{errors.confirmPassword.message}</p>}
         </div>
         {signup.error && (
-          <p className="text-sm text-red-500">{signup.error.message}</p>
+          <p className="text-sm text-red-500">
+            {signup.error.message === 'Invalid input'
+              ? 'Please check your inputs and try again'
+              : signup.error.message}
+          </p>
         )}
         <Button type="submit" className="w-full" disabled={signup.isPending}>
           {signup.isPending ? 'Creating account...' : 'Create account'}

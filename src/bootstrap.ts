@@ -10,10 +10,10 @@ import { EventEmitter } from 'events';
 
 // Auth
 import { AuthService } from './auth/auth.service';
-import { TokenManager } from './auth/token.manager';
+import { JwtTokenManager } from './auth/token.manager';
 import { InMemoryRateLimiter } from './auth/rate.limiter';
-import { PasswordHasher } from './auth/password.hasher';
-import { EmailService } from './auth/email.service';
+import { BcryptPasswordHasher } from './auth/password.hasher';
+import { MockEmailService } from './auth/email.service';
 import { PrismaUserRepository } from './auth/prisma-user.repository';
 import { PrismaTokenRepository } from './auth/prisma-token.repository';
 import { createAuthRouter, createAuthMiddleware } from './auth/auth.routes';
@@ -66,10 +66,10 @@ export async function bootstrap(app: Application): Promise<{ prisma: PrismaClien
   // ================================================================
   // Auth module (Prisma-backed)
   // ================================================================
-  const tokenManager = new TokenManager();
+  const tokenManager = new JwtTokenManager();
   const rateLimiter = new InMemoryRateLimiter();
-  const passwordHasher = new PasswordHasher();
-  const emailService = new EmailService();
+  const passwordHasher = new BcryptPasswordHasher();
+  const emailService = new MockEmailService();
   const userRepository = new PrismaUserRepository(prisma);
   const tokenRepository = new PrismaTokenRepository(prisma);
 
@@ -116,7 +116,7 @@ export async function bootstrap(app: Application): Promise<{ prisma: PrismaClien
   // ================================================================
   // Profiles module (auto-creates repos from DATABASE_URL)
   // ================================================================
-  app.use(`${apiPrefix}/profiles`, createProfileRoutes(authMiddleware));
+  app.use(`${apiPrefix}/profiles`, createProfileRoutes(authMiddleware as any));
   console.log('  ✅ Profile routes mounted');
 
   // ================================================================

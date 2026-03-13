@@ -2,7 +2,7 @@
 
 A community social network for Novi Sad residents, built by [NSRelaTech](https://github.com/NSRelaTech).
 
-Built on ideas from three sources:
+Inspired by ideas from three sources:
 - [Conversation Networks](https://arxiv.org/abs/2503.11714) (Roy, Lessig, Tang 2025) — civic communication infrastructure
 - [Decentralized Deliberation Standard](https://www.dds.xyz) (DDS) — open protocol for interoperable deliberation
 - [Plurality](https://plurality.net/) (Tang, Weyl) — plural governance and collaborative technology

@@ -56,7 +56,7 @@ model UserProfile {
   userId       String    @unique @map("user_id") @db.Uuid
   displayName  String?   @map("display_name") @db.VarChar(100)
   bio          String?   @db.Text
-  avatarUrl    String?   @map("avatar_url") @db.VarChar(500)
+  avatarUrl    String?   @map("avatar_url") @db.Text
   coverUrl     String?   @map("cover_url") @db.VarChar(500)
   location     String?   @db.VarChar(100)
   website      String?   @db.VarChar(255)

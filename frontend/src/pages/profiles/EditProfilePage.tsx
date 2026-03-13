@@ -1,16 +1,20 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Camera } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/stores/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+const API_BASE = import.meta.env.VITE_API_URL || '/api/v1';
 
 const editProfileSchema = z.object({
   displayName: z.string().max(100).optional(),
@@ -25,6 +29,9 @@ export function EditProfilePage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const userId = useAuthStore((s) => s.user?.id);
+  const username = useAuthStore((s) => s.user?.username);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
   const { data: profileResult } = useQuery({
     queryKey: ['profile', userId],
@@ -45,8 +52,38 @@ export function EditProfilePage() {
         location: p.location || '',
         website: p.website || '',
       });
+      if (p.avatarUrl) setAvatarPreview(p.avatarUrl);
     }
   }, [profileResult, reset]);
+
+  const uploadAvatar = useMutation({
+    mutationFn: async (file: File) => {
+      const token = useAuthStore.getState().accessToken;
+      const formData = new FormData();
+      formData.append('avatar', file);
+      const res = await fetch(`${API_BASE}/profiles/me/avatar`, {
+        method: 'POST',
+        headers: { ...(token && { Authorization: `Bearer ${token}` }) },
+        body: formData,
+      });
+      if (!res.ok) throw new Error('Upload failed');
+      return res.json();
+    },
+    onSuccess: (data) => {
+      if (data?.data?.avatarUrl) setAvatarPreview(data.data.avatarUrl);
+      queryClient.invalidateQueries({ queryKey: ['profile', userId] });
+    },
+  });
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File too large. Max 5MB.');
+      return;
+    }
+    uploadAvatar.mutate(file);
+  };
 
   const update = useMutation({
     mutationFn: (data: EditProfileForm) =>
@@ -63,6 +100,8 @@ export function EditProfilePage() {
     },
   });
 
+  const initials = (username || '??').slice(0, 2).toUpperCase();
+
   return (
     <div className="mx-auto max-w-lg">
       <Card>
@@ -70,6 +109,38 @@ export function EditProfilePage() {
           <CardTitle>Edit profile</CardTitle>
         </CardHeader>
         <CardContent>
+          <div className="flex flex-col items-center gap-2 mb-6">
+            <div className="relative">
+              <Avatar className="h-20 w-20">
+                <AvatarImage src={avatarPreview || undefined} />
+                <AvatarFallback className="bg-stone-200 text-stone-600 text-lg">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="absolute bottom-0 right-0 rounded-full bg-stone-900 p-1.5 text-white hover:bg-stone-700 transition-colors"
+                disabled={uploadAvatar.isPending}
+              >
+                <Camera className="h-3.5 w-3.5" />
+              </button>
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleFileChange}
+            />
+            {uploadAvatar.isPending && (
+              <p className="text-xs text-stone-400">Uploading...</p>
+            )}
+            {uploadAvatar.error && (
+              <p className="text-xs text-red-500">Upload failed</p>
+            )}
+          </div>
+
           <form onSubmit={handleSubmit((d) => update.mutate(d))} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="displayName">Display name</Label>

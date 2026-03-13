@@ -7,6 +7,8 @@ import { PrismaClient } from '@prisma/client';
 import { Application, Request, Response, NextFunction } from 'express';
 import { Pool } from 'pg';
 import { EventEmitter } from 'events';
+import multer from 'multer';
+import sharp from 'sharp';
 
 // Auth
 import { AuthService } from './auth/auth.service';
@@ -144,6 +146,33 @@ export async function bootstrap(app: Application): Promise<{ prisma: PrismaClien
   // Profiles module (auto-creates repos from DATABASE_URL)
   // ================================================================
   app.use(`${apiPrefix}/profiles`, createProfileRoutes(authMiddleware as any));
+
+  // Avatar upload endpoint (multer + sharp → base64 data URL → Prisma)
+  const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
+  app.post(`${apiPrefix}/profiles/me/avatar`, authMiddleware, upload.single('avatar'), async (req: any, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) return res.status(401).json({ success: false, error: 'UNAUTHORIZED' });
+      if (!req.file) return res.status(400).json({ success: false, error: 'NO_FILE', message: 'No file uploaded' });
+
+      const resized = await sharp(req.file.buffer)
+        .resize(200, 200, { fit: 'cover' })
+        .jpeg({ quality: 80 })
+        .toBuffer();
+
+      const dataUrl = `data:image/jpeg;base64,${resized.toString('base64')}`;
+
+      await prisma.userProfile.update({
+        where: { userId },
+        data: { avatarUrl: dataUrl },
+      });
+
+      res.json({ success: true, data: { avatarUrl: dataUrl } });
+    } catch (err: any) {
+      console.error('Avatar upload error:', err);
+      res.status(500).json({ success: false, error: 'UPLOAD_FAILED', message: err.message });
+    }
+  });
   console.log('  ✅ Profile routes mounted');
 
   // ================================================================

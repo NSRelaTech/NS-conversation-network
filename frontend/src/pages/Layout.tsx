@@ -1,7 +1,9 @@
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { Home, Users, User } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '@/lib/api';
 import { useAuthStore } from '@/stores/auth';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +22,13 @@ export function Layout() {
     navigate('/auth/login');
   };
 
+  const { data: profileResult } = useQuery({
+    queryKey: ['profile', user?.id],
+    queryFn: () => api<any>(`/profiles/me`),
+    enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000,
+  });
+  const avatarUrl = profileResult?.data?.avatarUrl;
   const initials = user?.username?.slice(0, 2).toUpperCase() || '??';
 
   const tabs = [
@@ -51,6 +60,7 @@ export function Layout() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="rounded-full">
                 <Avatar className="h-8 w-8">
+                  {avatarUrl && <AvatarImage src={avatarUrl} />}
                   <AvatarFallback className="bg-stone-200 text-stone-600 text-xs">
                     {initials}
                   </AvatarFallback>
@@ -61,7 +71,7 @@ export function Layout() {
               <DropdownMenuItem onClick={() => navigate(`/users/${user?.id}`)}>
                 Profile
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/settings/profile')}>
+              <DropdownMenuItem onClick={() => navigate('/settings')}>
                 Settings
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handleLogout}>
@@ -82,6 +92,7 @@ export function Layout() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="rounded-full h-8 w-8">
                 <Avatar className="h-7 w-7">
+                  {avatarUrl && <AvatarImage src={avatarUrl} />}
                   <AvatarFallback className="bg-stone-200 text-stone-600 text-xs">
                     {initials}
                   </AvatarFallback>
@@ -89,7 +100,7 @@ export function Layout() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => navigate('/settings/profile')}>
+              <DropdownMenuItem onClick={() => navigate('/settings')}>
                 Settings
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handleLogout}>

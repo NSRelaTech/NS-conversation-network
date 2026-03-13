@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { MapPin, LinkIcon } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth';
 import { FollowButton } from '@/components/social/FollowButton';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { buttonVariants } from '@/components/ui/button';
 
 interface Profile {
@@ -28,6 +28,7 @@ export function ProfileHeader({ profile }: { profile: Profile }) {
     <div className="rounded-lg border bg-white p-6">
       <div className="flex items-start gap-4">
         <Avatar className="h-16 w-16">
+          {profile.avatarUrl && <AvatarImage src={profile.avatarUrl} />}
           <AvatarFallback className="bg-amber-100 text-amber-700 text-lg">
             {initials}
           </AvatarFallback>

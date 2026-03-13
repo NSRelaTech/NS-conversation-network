@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Heart, MessageCircle, Trash2 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/stores/auth';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -78,9 +78,34 @@ export function PostCard({ post }: { post: Post }) {
   const deletePost = useMutation({
     mutationFn: () =>
       api<any>(`/posts/${post.id}`, { method: 'DELETE' }),
-    onSuccess: () => {
+    onMutate: () => {
+      // Optimistically remove post from all feed caches
+      const removPost = (old: any) => {
+        if (!old) return old;
+        // InfiniteQuery structure: { pages: [{ data: [...] }] }
+        if (old.pages) {
+          return {
+            ...old,
+            pages: old.pages.map((page: any) => ({
+              ...page,
+              data: (page.data || []).filter((p: any) => p.id !== post.id),
+            })),
+          };
+        }
+        // Regular query structure: { data: [...] }
+        if (old.data) {
+          return { ...old, data: old.data.filter((p: any) => p.id !== post.id) };
+        }
+        return old;
+      };
+      queryClient.setQueriesData({ queryKey: ['feed'] }, removPost);
+      queryClient.setQueriesData({ queryKey: ['group-feed'] }, removPost);
+      queryClient.setQueriesData({ queryKey: ['user-posts'] }, removPost);
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['feed'] });
       queryClient.invalidateQueries({ queryKey: ['group-feed'] });
+      queryClient.invalidateQueries({ queryKey: ['user-posts'] });
     },
   });
 
@@ -91,6 +116,7 @@ export function PostCard({ post }: { post: Post }) {
       <CardContent className="pt-6">
         <div className="flex gap-3">
           <Avatar className="h-10 w-10">
+            {post.author.profilePictureUrl && <AvatarImage src={post.author.profilePictureUrl} />}
             <AvatarFallback className="bg-stone-200 text-stone-600 text-sm">
               {initials}
             </AvatarFallback>

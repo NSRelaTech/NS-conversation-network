@@ -12,6 +12,7 @@ import { GroupDetailPage } from '@/pages/groups/GroupDetailPage';
 import { CreateGroupPage } from '@/pages/groups/CreateGroupPage';
 import { ProfilePage } from '@/pages/profiles/ProfilePage';
 import { EditProfilePage } from '@/pages/profiles/EditProfilePage';
+import { SettingsPage } from '@/pages/SettingsPage';
 
 const queryClient = new QueryClient();
 
@@ -38,6 +39,7 @@ export default function App() {
             <Route path="/groups/create" element={<CreateGroupPage />} />
             <Route path="/groups/:slug" element={<GroupDetailPage />} />
             <Route path="/users/:username" element={<ProfilePage />} />
+            <Route path="/settings" element={<SettingsPage />} />
             <Route path="/settings/profile" element={<EditProfilePage />} />
           </Route>
         </Routes>

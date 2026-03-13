@@ -49,8 +49,9 @@ export class FeedService {
     const safeLimit = Math.min(limit, POST_CONSTANTS.MAX_PAGE_SIZE);
 
     // Check cache first (only for first page without cursor)
+    const effectiveSort = sort || 'latest';
     if (!cursor) {
-      const cacheKey = CacheKeyBuilder.homeFeed(userId, 1);
+      const cacheKey = CacheKeyBuilder.homeFeed(userId, 1, effectiveSort);
       const cached = await this.cacheService.get(cacheKey);
 
       if (cached) {
@@ -93,7 +94,7 @@ export class FeedService {
 
     // Cache the result (only for first page)
     if (!cursor) {
-      const cacheKey = CacheKeyBuilder.homeFeed(userId, 1);
+      const cacheKey = CacheKeyBuilder.homeFeed(userId, 1, effectiveSort);
       await this.cacheService.set(
         cacheKey,
         JSON.stringify(result),
@@ -129,8 +130,9 @@ export class FeedService {
     const safeLimit = Math.min(limit, POST_CONSTANTS.MAX_PAGE_SIZE);
 
     // Check cache first (only for first page without cursor)
+    const effectiveSort = sort || 'latest';
     if (!cursor) {
-      const cacheKey = CacheKeyBuilder.groupFeed(groupId, 1);
+      const cacheKey = CacheKeyBuilder.groupFeed(groupId, 1, effectiveSort);
       const cached = await this.cacheService.get(cacheKey);
 
       if (cached) {
@@ -166,7 +168,7 @@ export class FeedService {
 
     // Cache the result (only for first page)
     if (!cursor) {
-      const cacheKey = CacheKeyBuilder.groupFeed(groupId, 1);
+      const cacheKey = CacheKeyBuilder.groupFeed(groupId, 1, effectiveSort);
       await this.cacheService.set(
         cacheKey,
         JSON.stringify(result),
@@ -192,8 +194,9 @@ export class FeedService {
     const safeLimit = Math.min(limit, POST_CONSTANTS.MAX_PAGE_SIZE);
 
     // Check cache first (only for first page without cursor)
+    const effectiveSort = sort || 'latest';
     if (!cursor) {
-      const cacheKey = CacheKeyBuilder.userProfileFeed(profileUserId, 1);
+      const cacheKey = CacheKeyBuilder.userProfileFeed(profileUserId, 1, effectiveSort);
       const cached = await this.cacheService.get(cacheKey);
 
       if (cached) {
@@ -229,7 +232,7 @@ export class FeedService {
 
     // Cache the result (only for first page)
     if (!cursor) {
-      const cacheKey = CacheKeyBuilder.userProfileFeed(profileUserId, 1);
+      const cacheKey = CacheKeyBuilder.userProfileFeed(profileUserId, 1, effectiveSort);
       await this.cacheService.set(
         cacheKey,
         JSON.stringify(result),

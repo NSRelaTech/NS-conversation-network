@@ -294,16 +294,16 @@ export class CacheService {
 
 // Cache key builders
 export class CacheKeyBuilder {
-  static homeFeed(userId: string, page: number = 1): string {
-    return `feed:home:user:${userId}:page:${page}:v1`;
+  static homeFeed(userId: string, page: number = 1, sort: string = 'latest'): string {
+    return `feed:home:user:${userId}:sort:${sort}:page:${page}:v2`;
   }
 
-  static groupFeed(groupId: string, page: number = 1): string {
-    return `feed:group:${groupId}:page:${page}:v1`;
+  static groupFeed(groupId: string, page: number = 1, sort: string = 'latest'): string {
+    return `feed:group:${groupId}:sort:${sort}:page:${page}:v2`;
   }
 
-  static userProfileFeed(userId: string, page: number = 1): string {
-    return `feed:profile:user:${userId}:page:${page}:v1`;
+  static userProfileFeed(userId: string, page: number = 1, sort: string = 'latest'): string {
+    return `feed:profile:user:${userId}:sort:${sort}:page:${page}:v2`;
   }
 
   static post(postId: string): string {

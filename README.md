@@ -24,9 +24,9 @@ The current MVP establishes the social foundation. Future iterations will introd
 - **User accounts** — register, login, JWT auth with refresh tokens
 - **Profiles** — avatar upload, bio, editable username/email/password
 - **Posts** — create, edit, delete with optimistic UI updates
-- **Feed** — home feed (followed users + joined groups), sortable by latest or popular (engagement score)
-- **Reactions** — like, love, laugh, wow, sad, angry with toggle
-- **Comments** — inline comments on posts with create/delete
+- **Feed** — home feed (followed users + joined groups), sortable by latest or popular
+- **Likes** — toggle like on posts
+- **Comments** — inline comments on posts
 - **Groups** — create, join/leave, group feeds, admin edit/delete
 - **Account management** — change username, email, password, delete account
 

@@ -9,40 +9,39 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import { createApp } from './app';
+import { bootstrap } from './bootstrap';
 
 const PORT = parseInt(process.env.PORT || '3000', 10);
 const HOST = process.env.HOST || '0.0.0.0';
 
-async function bootstrap(): Promise<void> {
+async function start(): Promise<void> {
   try {
-    console.log('🚀 Starting Community Social Network API...');
+    console.log('🚀 Starting NS Conversation Network API...');
     console.log(`   Environment: ${process.env.NODE_ENV || 'development'}`);
 
-    // Create Express app
+    // Create Express app (middleware only)
     const app = createApp();
+
+    // Wire dependencies and mount routes
+    const { prisma, pool } = await bootstrap(app);
 
     // Start server
     const server = app.listen(PORT, HOST, () => {
       console.log(`✅ Server running at http://${HOST}:${PORT}`);
       console.log(`   API Base: http://${HOST}:${PORT}/api/${process.env.API_VERSION || 'v1'}`);
       console.log(`   Health: http://${HOST}:${PORT}/health`);
-      console.log('');
-      console.log('📋 Available endpoints:');
-      console.log('   GET  /health              - Health check');
-      console.log('   GET  /api/v1              - API documentation');
-      console.log('   *    /api/v1/profiles/*   - Profile operations');
-      console.log('');
     });
 
     // Graceful shutdown
     const shutdown = (signal: string) => {
       console.log(`\n${signal} received. Shutting down gracefully...`);
-      server.close(() => {
+      server.close(async () => {
+        await prisma.$disconnect();
+        await pool.end();
         console.log('Server closed.');
         process.exit(0);
       });
 
-      // Force shutdown after 10 seconds
       setTimeout(() => {
         console.error('Forced shutdown after timeout');
         process.exit(1);
@@ -58,5 +57,4 @@ async function bootstrap(): Promise<void> {
   }
 }
 
-// Start the application
-bootstrap();
+start();

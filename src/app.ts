@@ -19,7 +19,11 @@ export function createApp(): Application {
   // ============================================================
   app.use(helmet());
   app.use(cors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+    origin: [
+      process.env.CORS_ORIGIN || 'http://localhost:5173',
+      'http://localhost:3000',
+      'http://localhost:5173',
+    ],
     credentials: true,
   }));
 
@@ -59,73 +63,10 @@ export function createApp(): Application {
   });
 
   // ============================================================
-  // API Routes
+  // API Routes — wired by bootstrap.ts
+  // Health check and CORS are set up here.
+  // Real module routes + 404/error handlers are added by bootstrap().
   // ============================================================
-  const apiPrefix = `/api/${process.env.API_VERSION || 'v1'}`;
-
-  // API documentation endpoint
-  app.get(apiPrefix, (req: Request, res: Response) => {
-    res.json({
-      name: 'Community Social Network API',
-      version: process.env.API_VERSION || 'v1',
-      status: 'running',
-      documentation: 'Routes require dependency injection - see /health for module status',
-      endpoints: {
-        auth: `${apiPrefix}/auth`,
-        profiles: `${apiPrefix}/profiles`,
-        posts: `${apiPrefix}/posts`,
-        comments: `${apiPrefix}/comments`,
-        groups: `${apiPrefix}/groups`,
-        social: `${apiPrefix}/social`,
-        notifications: `${apiPrefix}/notifications`,
-        admin: `${apiPrefix}/admin`,
-      },
-      note: 'Full route wiring requires database connection. Run with DATABASE_URL configured.',
-    });
-  });
-
-  // Placeholder routes for each module (shows structure exists)
-  const modules = ['auth', 'profiles', 'posts', 'comments', 'groups', 'social', 'notifications', 'admin'];
-  modules.forEach(module => {
-    app.all(`${apiPrefix}/${module}*`, (req: Request, res: Response) => {
-      res.status(503).json({
-        success: false,
-        error: 'SERVICE_UNAVAILABLE',
-        message: `${module} routes require database connection and dependency injection`,
-        hint: 'Configure DATABASE_URL and run with full bootstrap',
-      });
-    });
-  });
-
-  // ============================================================
-  // 404 Handler
-  // ============================================================
-  app.use((req: Request, res: Response) => {
-    res.status(404).json({
-      success: false,
-      error: 'NOT_FOUND',
-      message: `Route ${req.method} ${req.path} not found`,
-    });
-  });
-
-  // ============================================================
-  // Global Error Handler
-  // ============================================================
-  app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
-    console.error('Unhandled error:', err);
-
-    const statusCode = (err as any).statusCode || 500;
-    const errorCode = (err as any).code || 'INTERNAL_ERROR';
-
-    res.status(statusCode).json({
-      success: false,
-      error: errorCode,
-      message: process.env.NODE_ENV === 'production'
-        ? 'An unexpected error occurred'
-        : err.message,
-      ...(process.env.NODE_ENV !== 'production' && { stack: err.stack }),
-    });
-  });
 
   return app;
 }

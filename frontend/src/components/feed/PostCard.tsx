@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Heart, MessageCircle, Trash2 } from 'lucide-react';
 import { api } from '@/lib/api';
@@ -21,6 +21,7 @@ interface Post {
   likesCount: number;
   commentsCount: number;
   createdAt: string;
+  userReaction?: string | null;
 }
 
 function timeAgo(dateStr: string): string {
@@ -38,8 +39,14 @@ export function PostCard({ post }: { post: Post }) {
   const queryClient = useQueryClient();
   const currentUserId = useAuthStore((s) => s.user?.id);
   const isOwner = currentUserId === post.authorId;
-  const [liked, setLiked] = useState(false);
+  const [liked, setLiked] = useState(!!post.userReaction);
   const [likesCount, setLikesCount] = useState(post.likesCount);
+
+  // Sync from server when feed refetches
+  useEffect(() => {
+    setLiked(!!post.userReaction);
+    setLikesCount(post.likesCount);
+  }, [post.userReaction, post.likesCount]);
 
   const toggleLike = useMutation({
     mutationFn: () =>

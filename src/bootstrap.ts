@@ -67,6 +67,21 @@ export async function bootstrap(app: Application): Promise<{ prisma: PrismaClien
   await prisma.$connect();
   console.log('✅ Database connected (Prisma)');
 
+  // Auto-create user profile on registration
+  prisma.$use(async (params, next) => {
+    const result = await next(params);
+    if (params.model === 'User' && params.action === 'create' && result?.id) {
+      try {
+        await prisma.userProfile.create({
+          data: { userId: result.id, displayName: result.username || null },
+        });
+      } catch {
+        // Profile may already exist (race condition) — ignore
+      }
+    }
+    return result;
+  });
+
   // Shared pg Pool for modules using raw SQL
   const pool = new Pool({ connectionString: process.env.DATABASE_URL });
   await pool.query('SELECT 1');

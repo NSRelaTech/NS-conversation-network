@@ -142,6 +142,7 @@ export class FeedService {
     // Fetch posts
     const posts = await this.feedRepository.getGroupFeed({
       groupId,
+      userId,
       cursor: cursorDate,
       limit: safeLimit + 1,
     });

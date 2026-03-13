@@ -55,6 +55,9 @@ export class FeedRepository {
     values.push(limit);
     const limitParamIndex = paramIndex++;
 
+    values.push(userId);
+    const userReactionParamIndex = paramIndex++;
+
     const sql = `
       SELECT
         p.id,
@@ -79,11 +82,13 @@ export class FeedRepository {
           WHEN g.id IS NOT NULL THEN json_build_object('id', g.id, 'name', g.name)
           ELSE NULL
         END AS group,
-        (p.reaction_count + p.comment_count * 2) AS "engagementScore"
+        (p.reaction_count + p.comment_count * 2) AS "engagementScore",
+        pr.type AS "userReaction"
       FROM posts p
       INNER JOIN users u ON p.author_id = u.id
       LEFT JOIN user_profiles up ON u.id = up.user_id
       LEFT JOIN groups g ON p.group_id = g.id
+      LEFT JOIN post_reactions pr ON pr.post_id = p.id AND pr.user_id = $${userReactionParamIndex}
       WHERE
         p.deleted_at IS NULL
         AND p.created_at < $${cursorParamIndex}
@@ -107,7 +112,7 @@ export class FeedRepository {
    * Posts from a specific group
    */
   async getGroupFeed(query: FeedQuery): Promise<FeedItem[]> {
-    const { groupId, cursor, limit } = query;
+    const { groupId, userId, cursor, limit } = query;
     const cursorTimestamp = cursor || new Date();
 
     const sql = `
@@ -131,11 +136,13 @@ export class FeedRepository {
           'profilePictureUrl', up.avatar_url
         ) AS author,
         json_build_object('id', g.id, 'name', g.name) AS group,
-        (p.reaction_count + p.comment_count * 2) AS "engagementScore"
+        (p.reaction_count + p.comment_count * 2) AS "engagementScore",
+        pr.type AS "userReaction"
       FROM posts p
       INNER JOIN users u ON p.author_id = u.id
       LEFT JOIN user_profiles up ON u.id = up.user_id
       INNER JOIN groups g ON p.group_id = g.id
+      LEFT JOIN post_reactions pr ON pr.post_id = p.id AND pr.user_id = $4
       WHERE
         p.group_id = $1
         AND p.deleted_at IS NULL
@@ -146,7 +153,7 @@ export class FeedRepository {
       LIMIT $3
     `;
 
-    const result = await this.pool.query(sql, [groupId, cursorTimestamp, limit]);
+    const result = await this.pool.query(sql, [groupId, cursorTimestamp, limit, userId]);
     return result.rows.map((row) => ({
       ...row,
       isDeleted: false,

@@ -22,6 +22,13 @@ export class FeedRepository {
    * Posts from followed users and joined groups
    * Uses cursor-based pagination
    */
+  private orderByClause(sort?: string): string {
+    if (sort === 'popular') {
+      return 'p.is_pinned DESC, (p.reaction_count + p.comment_count * 2) DESC, p.created_at DESC';
+    }
+    return 'p.is_pinned DESC, p.created_at DESC';
+  }
+
   async getHomeFeed(query: FeedQuery): Promise<FeedItem[]> {
     const { userId, followingIds, groupIds, cursor, limit } = query;
 
@@ -94,8 +101,7 @@ export class FeedRepository {
         AND p.created_at < $${cursorParamIndex}
         AND ${sourceCondition}
       ORDER BY
-        p.is_pinned DESC,
-        p.created_at DESC
+        ${this.orderByClause(query.sort)}
       LIMIT $${limitParamIndex}
     `;
 
@@ -148,8 +154,7 @@ export class FeedRepository {
         AND p.deleted_at IS NULL
         AND p.created_at < $2
       ORDER BY
-        p.is_pinned DESC,
-        p.created_at DESC
+        ${this.orderByClause(query.sort)}
       LIMIT $3
     `;
 
@@ -204,8 +209,7 @@ export class FeedRepository {
         AND p.visibility IN ('PUBLIC', 'GROUP')
         AND p.created_at < $2
       ORDER BY
-        p.is_pinned DESC,
-        p.created_at DESC
+        ${this.orderByClause(query.sort)}
       LIMIT $3
     `;
 

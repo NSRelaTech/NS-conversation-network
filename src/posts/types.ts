@@ -83,6 +83,8 @@ export interface FeedResult {
   nextCursor?: string;
 }
 
+export type FeedSort = 'latest' | 'popular';
+
 export interface FeedQuery {
   userId?: string;
   followingIds?: string[];
@@ -90,6 +92,7 @@ export interface FeedQuery {
   groupId?: string;
   cursor?: Date;
   limit: number;
+  sort?: FeedSort;
 }
 
 export interface PaginationParams {

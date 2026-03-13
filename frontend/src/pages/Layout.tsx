@@ -57,14 +57,6 @@ export function Layout() {
           </div>
 
           <div className="flex items-center gap-1">
-            <a
-              href="https://github.com/NSRelaTech/NS-conversation-network"
-              target="_blank"
-              rel="noopener noreferrer"
-              className={buttonVariants({ variant: "ghost", size: "icon" })}
-            >
-              <Github className="h-5 w-5" />
-            </a>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="rounded-full">
@@ -82,6 +74,17 @@ export function Layout() {
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate('/settings')}>
                 Settings
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <a
+                  href="https://github.com/NSRelaTech/NS-conversation-network"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2"
+                >
+                  <Github className="h-4 w-4" />
+                  GitHub
+                </a>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handleLogout}>
                 Log out
@@ -112,6 +115,17 @@ export function Layout() {
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => navigate('/settings')}>
                 Settings
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <a
+                  href="https://github.com/NSRelaTech/NS-conversation-network"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2"
+                >
+                  <Github className="h-4 w-4" />
+                  GitHub
+                </a>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handleLogout}>
                 Log out

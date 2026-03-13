@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { PostCard } from '@/components/feed/PostCard';
 import { CreatePostForm } from '@/components/feed/CreatePostForm';
+import { FeedSortToggle, type FeedSort } from '@/components/feed/FeedSortToggle';
 import { Button } from '@/components/ui/button';
 
 interface FeedResponse {
@@ -14,6 +16,8 @@ interface FeedResponse {
 }
 
 export function FeedPage() {
+  const [sort, setSort] = useState<FeedSort>('latest');
+
   const {
     data,
     fetchNextPage,
@@ -22,9 +26,9 @@ export function FeedPage() {
     isLoading,
     error,
   } = useInfiniteQuery({
-    queryKey: ['feed'],
+    queryKey: ['feed', sort],
     queryFn: ({ pageParam }) => {
-      const params = new URLSearchParams({ limit: '20' });
+      const params = new URLSearchParams({ limit: '20', sort });
       if (pageParam) params.set('cursor', pageParam);
       return api<FeedResponse>(`/feed?${params}`);
     },
@@ -37,6 +41,7 @@ export function FeedPage() {
   return (
     <div className="space-y-4">
       <CreatePostForm />
+      <FeedSortToggle value={sort} onChange={setSort} />
 
       {isLoading && (
         <p className="text-center text-stone-400 py-8">Loading feed...</p>

@@ -7,7 +7,7 @@ import { Request, Response, NextFunction } from 'express';
 import { PostService } from './post.service';
 import { FeedService } from './feed.service';
 import { ReactionService } from './reaction.service';
-import { ReactionType } from './types';
+import { ReactionType, FeedSort } from './types';
 
 export interface AuthenticatedRequest extends Request {
   user?: {
@@ -169,8 +169,9 @@ export class PostController {
 
       const cursor = req.query.cursor as string | undefined;
       const limit = parseInt(req.query.limit as string) || 20;
+      const sort = req.query.sort as FeedSort | undefined;
 
-      const feed = await this.feedService.getHomeFeed(userId, cursor, limit);
+      const feed = await this.feedService.getHomeFeed(userId, cursor, limit, sort);
 
       res.json({
         success: true,
@@ -204,12 +205,14 @@ export class PostController {
       const { groupId } = req.params;
       const cursor = req.query.cursor as string | undefined;
       const limit = parseInt(req.query.limit as string) || 20;
+      const sort = req.query.sort as FeedSort | undefined;
 
       const feed = await this.feedService.getGroupFeed(
         groupId,
         userId,
         cursor,
-        limit
+        limit,
+        sort
       );
 
       res.json({
@@ -238,11 +241,13 @@ export class PostController {
       const { userId } = req.params;
       const cursor = req.query.cursor as string | undefined;
       const limit = parseInt(req.query.limit as string) || 20;
+      const sort = req.query.sort as FeedSort | undefined;
 
       const feed = await this.feedService.getUserProfileFeed(
         userId,
         cursor,
-        limit
+        limit,
+        sort
       );
 
       res.json({

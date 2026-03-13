@@ -224,7 +224,65 @@ export async function bootstrap(app: Application): Promise<{ prisma: PrismaClien
   app.use(`${apiPrefix}/feed`, authMiddleware, createFeedRoutes(postController));
   app.use(`${apiPrefix}/groups`, authMiddleware, createGroupFeedRoutes(postController));
   app.use(`${apiPrefix}/users`, authMiddleware, createUserProfileRoutes(postController));
-  console.log('  ✅ Post/Feed routes mounted');
+
+  // Comments endpoints (Prisma-based MVP)
+  app.post(`${apiPrefix}/posts/:postId/comments`, authMiddleware, async (req: any, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) return res.status(401).json({ success: false, error: 'UNAUTHORIZED' });
+      const { postId } = req.params;
+      const { content, parentCommentId } = req.body;
+      if (!content || typeof content !== 'string' || content.trim().length === 0) {
+        return res.status(400).json({ success: false, error: 'INVALID_CONTENT' });
+      }
+      const comment = await prisma.comment.create({
+        data: {
+          postId,
+          authorId: userId,
+          content: content.trim(),
+          parentCommentId: parentCommentId || null,
+        },
+        include: { author: { select: { id: true, username: true } } },
+      });
+      // Increment comment count on post
+      await prisma.post.update({ where: { id: postId }, data: { commentCount: { increment: 1 } } });
+      res.status(201).json({ success: true, data: comment });
+    } catch (err: any) {
+      console.error('Comment create error:', err);
+      res.status(500).json({ success: false, error: 'INTERNAL', message: err.message });
+    }
+  });
+
+  app.get(`${apiPrefix}/posts/:postId/comments`, authMiddleware, async (req: any, res: Response) => {
+    try {
+      const { postId } = req.params;
+      const comments = await prisma.comment.findMany({
+        where: { postId, deletedAt: null },
+        include: { author: { select: { id: true, username: true } } },
+        orderBy: { createdAt: 'asc' },
+      });
+      res.json({ success: true, data: comments });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: 'INTERNAL', message: err.message });
+    }
+  });
+
+  app.delete(`${apiPrefix}/comments/:commentId`, authMiddleware, async (req: any, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) return res.status(401).json({ success: false, error: 'UNAUTHORIZED' });
+      const { commentId } = req.params;
+      const comment = await prisma.comment.findUnique({ where: { id: commentId } });
+      if (!comment) return res.status(404).json({ success: false, error: 'NOT_FOUND' });
+      if (comment.authorId !== userId) return res.status(403).json({ success: false, error: 'FORBIDDEN' });
+      await prisma.comment.update({ where: { id: commentId }, data: { deletedAt: new Date() } });
+      await prisma.post.update({ where: { id: comment.postId }, data: { commentCount: { decrement: 1 } } });
+      res.json({ success: true });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: 'INTERNAL', message: err.message });
+    }
+  });
+  console.log('  ✅ Post/Feed/Comment routes mounted');
 
   // ================================================================
   // Profiles module (auto-creates repos from DATABASE_URL)

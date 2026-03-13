@@ -6,6 +6,7 @@ import { useAuthStore } from '@/stores/auth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { CommentSection } from './CommentSection';
 
 interface PostAuthor {
   id: string;
@@ -47,6 +48,7 @@ export function PostCard({ post }: { post: Post }) {
   const isOwner = currentUserId === post.authorId;
   const [liked, setLiked] = useState(!!post.userReaction);
   const [likesCount, setLikesCount] = useState(post.likesCount);
+  const [showComments, setShowComments] = useState(false);
 
   // Sync from server when feed refetches
   useEffect(() => {
@@ -162,11 +164,17 @@ export function PostCard({ post }: { post: Post }) {
                 <Heart className={`h-4 w-4 ${liked ? 'fill-current' : ''}`} />
                 {likesCount > 0 && <span>{likesCount}</span>}
               </Button>
-              <Button variant="ghost" size="sm" className="gap-1.5 text-stone-500">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-1.5 text-stone-500"
+                onClick={() => setShowComments((prev) => !prev)}
+              >
                 <MessageCircle className="h-4 w-4" />
                 {post.commentsCount > 0 && <span>{post.commentsCount}</span>}
               </Button>
             </div>
+            {showComments && <CommentSection postId={post.id} />}
           </div>
         </div>
       </CardContent>

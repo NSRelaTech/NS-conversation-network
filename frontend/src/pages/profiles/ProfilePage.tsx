@@ -1,11 +1,14 @@
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { ProfileHeader } from '@/components/profiles/ProfileHeader';
 import { PostCard } from '@/components/feed/PostCard';
+import { FeedSortToggle, type FeedSort } from '@/components/feed/FeedSortToggle';
 import { Button } from '@/components/ui/button';
 
 export function ProfilePage() {
+  const [sort, setSort] = useState<FeedSort>('latest');
   const { username: userId } = useParams<{ username: string }>();
 
   const { data: profileResult, isLoading, error } = useQuery({
@@ -20,9 +23,9 @@ export function ProfilePage() {
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteQuery({
-    queryKey: ['user-posts', userId],
+    queryKey: ['user-posts', userId, sort],
     queryFn: ({ pageParam }) => {
-      const params = new URLSearchParams({ limit: '20' });
+      const params = new URLSearchParams({ limit: '20', sort });
       if (pageParam) params.set('cursor', pageParam);
       return api<any>(`/users/${userId}/posts?${params}`);
     },
@@ -42,6 +45,7 @@ export function ProfilePage() {
   return (
     <div className="space-y-4">
       <ProfileHeader profile={profile} />
+      <FeedSortToggle value={sort} onChange={setSort} />
 
       {posts.map((post: any) => (
         <PostCard key={post.id} post={post} />

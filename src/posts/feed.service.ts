@@ -16,6 +16,7 @@ import { GroupMemberRepository } from '../groups/group-member.repository';
 import {
   FeedResult,
   FeedItem,
+  FeedSort,
   POST_CONSTANTS,
 } from './types';
 
@@ -41,7 +42,8 @@ export class FeedService {
   async getHomeFeed(
     userId: string,
     cursor?: string,
-    limit: number = POST_CONSTANTS.DEFAULT_PAGE_SIZE
+    limit: number = POST_CONSTANTS.DEFAULT_PAGE_SIZE,
+    sort?: FeedSort
   ): Promise<FeedResult> {
     // Validate limit
     const safeLimit = Math.min(limit, POST_CONSTANTS.MAX_PAGE_SIZE);
@@ -74,6 +76,7 @@ export class FeedService {
       groupIds,
       cursor: cursorDate,
       limit: safeLimit + 1,
+      sort,
     });
 
     // Determine if there are more posts
@@ -109,7 +112,8 @@ export class FeedService {
     groupId: string,
     userId: string,
     cursor?: string,
-    limit: number = POST_CONSTANTS.DEFAULT_PAGE_SIZE
+    limit: number = POST_CONSTANTS.DEFAULT_PAGE_SIZE,
+    sort?: FeedSort
   ): Promise<FeedResult> {
     // Check group membership
     const isMember = await this.groupMemberRepository.isMember(groupId, userId);
@@ -145,6 +149,7 @@ export class FeedService {
       userId,
       cursor: cursorDate,
       limit: safeLimit + 1,
+      sort,
     });
 
     // Determine if there are more posts
@@ -179,7 +184,8 @@ export class FeedService {
   async getUserProfileFeed(
     profileUserId: string,
     cursor?: string,
-    limit: number = POST_CONSTANTS.DEFAULT_PAGE_SIZE
+    limit: number = POST_CONSTANTS.DEFAULT_PAGE_SIZE,
+    sort?: FeedSort
   ): Promise<FeedResult> {
     // Validate limit
     const safeLimit = Math.min(limit, POST_CONSTANTS.MAX_PAGE_SIZE);
@@ -204,6 +210,7 @@ export class FeedService {
       userId: profileUserId,
       cursor: cursorDate,
       limit: safeLimit + 1,
+      sort,
     });
 
     // Determine if there are more posts

@@ -106,15 +106,15 @@ export function CommentSection({ postId }: { postId: string }) {
           placeholder="Write a comment..."
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          className="text-sm h-8"
+          className="text-sm h-10"
         />
         <Button
           type="submit"
           size="sm"
-          className="h-8 px-2"
+          className="h-10 px-3"
           disabled={!content.trim() || createComment.isPending}
         >
-          <Send className="h-3.5 w-3.5" />
+          <Send className="h-4 w-4" />
         </Button>
       </form>
     </div>

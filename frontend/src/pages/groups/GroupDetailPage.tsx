@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Users, Pencil, Trash2 } from 'lucide-react';
+import { Users, Pencil, Trash2, MoreHorizontal } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/stores/auth';
 import { PostCard } from '@/components/feed/PostCard';
@@ -10,6 +10,12 @@ import { FeedSortToggle, type FeedSort } from '@/components/feed/FeedSortToggle'
 import { JoinLeaveButton } from '@/components/groups/JoinLeaveButton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -135,30 +141,63 @@ export function GroupDetailPage() {
             <div className="flex items-center gap-2">
               {isAdmin && (
                 <>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setEditName(group.name);
-                      setEditDescription(group.description || '');
-                      setEditing(true);
-                    }}
-                  >
-                    <Pencil className="h-3.5 w-3.5 mr-1" />
-                    Edit
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                    onClick={() => {
-                      if (confirm('Delete this group? This cannot be undone.')) deleteGroup.mutate();
-                    }}
-                    disabled={deleteGroup.isPending}
-                  >
-                    <Trash2 className="h-3.5 w-3.5 mr-1" />
-                    Delete
-                  </Button>
+                  {/* Desktop: expanded buttons */}
+                  <div className="hidden sm:flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setEditName(group.name);
+                        setEditDescription(group.description || '');
+                        setEditing(true);
+                      }}
+                    >
+                      <Pencil className="h-3.5 w-3.5 mr-1" />
+                      Edit
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                      onClick={() => {
+                        if (confirm('Delete this group? This cannot be undone.')) deleteGroup.mutate();
+                      }}
+                      disabled={deleteGroup.isPending}
+                    >
+                      <Trash2 className="h-3.5 w-3.5 mr-1" />
+                      Delete
+                    </Button>
+                  </div>
+                  {/* Mobile: dropdown */}
+                  <div className="sm:hidden">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="icon" className="h-8 w-8">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => {
+                          setEditName(group.name);
+                          setEditDescription(group.description || '');
+                          setEditing(true);
+                        }}>
+                          <Pencil className="h-3.5 w-3.5 mr-2" />
+                          Edit group
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="text-red-500 focus:text-red-600"
+                          onClick={() => {
+                            if (confirm('Delete this group? This cannot be undone.')) deleteGroup.mutate();
+                          }}
+                          disabled={deleteGroup.isPending}
+                        >
+                          <Trash2 className="h-3.5 w-3.5 mr-2" />
+                          Delete group
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </>
               )}
               <JoinLeaveButton groupId={group.id} isMember={isMember} />

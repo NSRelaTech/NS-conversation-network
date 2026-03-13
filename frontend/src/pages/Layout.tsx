@@ -38,7 +38,7 @@ export function Layout() {
   ];
 
   return (
-    <div className="min-h-screen bg-stone-50 pb-16 lg:pb-0">
+    <div className="min-h-screen bg-stone-50 pb-[calc(3.5rem+env(safe-area-inset-bottom))] lg:pb-0">
       {/* Desktop top nav */}
       <nav className="sticky top-0 z-50 border-b bg-white/95 backdrop-blur hidden lg:block">
         <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
@@ -94,7 +94,7 @@ export function Layout() {
 
       {/* Mobile top bar — logo + avatar only */}
       <nav className="sticky top-0 z-50 border-b bg-white/95 backdrop-blur lg:hidden">
-        <div className="flex h-12 items-center justify-between px-4">
+        <div className="flex h-14 items-center justify-between px-4">
           <Link to="/" className="text-lg font-semibold text-stone-900">
             Community
           </Link>
@@ -138,7 +138,7 @@ export function Layout() {
       </main>
 
       {/* Mobile bottom tab bar */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-white lg:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-white lg:hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
         <div className="flex h-14 items-center justify-around">
           {tabs.map(({ path, icon: Icon, label }) => {
             const isActive = path === '/'
@@ -148,7 +148,7 @@ export function Layout() {
               <Link
                 key={path}
                 to={path}
-                className={`flex flex-col items-center gap-0.5 px-3 py-1 ${
+                className={`flex flex-col items-center justify-center gap-0.5 min-w-[44px] min-h-[44px] px-4 ${
                   isActive ? 'text-stone-900' : 'text-stone-400'
                 }`}
               >

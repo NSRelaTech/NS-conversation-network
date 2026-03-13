@@ -69,9 +69,6 @@ export function Layout() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => navigate(`/users/${user?.id}`)}>
-                Profile
-              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate('/settings')}>
                 Settings
               </DropdownMenuItem>

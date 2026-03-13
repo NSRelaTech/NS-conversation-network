@@ -13,6 +13,10 @@ import { CreateGroupPage } from '@/pages/groups/CreateGroupPage';
 import { ProfilePage } from '@/pages/profiles/ProfilePage';
 import { EditProfilePage } from '@/pages/profiles/EditProfilePage';
 import { SettingsPage } from '@/pages/SettingsPage';
+import { ChangeUsernamePage } from '@/pages/settings/ChangeUsernamePage';
+import { ChangeEmailPage } from '@/pages/settings/ChangeEmailPage';
+import { ChangePasswordPage } from '@/pages/settings/ChangePasswordPage';
+import { DeleteAccountPage } from '@/pages/settings/DeleteAccountPage';
 
 const queryClient = new QueryClient();
 
@@ -41,6 +45,10 @@ export default function App() {
             <Route path="/users/:username" element={<ProfilePage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/settings/profile" element={<EditProfilePage />} />
+            <Route path="/settings/username" element={<ChangeUsernamePage />} />
+            <Route path="/settings/email" element={<ChangeEmailPage />} />
+            <Route path="/settings/password" element={<ChangePasswordPage />} />
+            <Route path="/settings/delete-account" element={<DeleteAccountPage />} />
           </Route>
         </Routes>
         <Toaster />

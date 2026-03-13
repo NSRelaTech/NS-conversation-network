@@ -1,5 +1,5 @@
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
-import { Home, Users, User, Github } from 'lucide-react';
+import { Home, Users, Settings, Github } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/stores/auth';
@@ -34,7 +34,7 @@ export function Layout() {
   const tabs = [
     { path: '/', icon: Home, label: 'Feed' },
     { path: '/groups', icon: Users, label: 'Groups' },
-    { path: `/users/${user?.id}`, icon: User, label: 'Profile' },
+    { path: '/settings', icon: Settings, label: 'Settings' },
   ];
 
   return (

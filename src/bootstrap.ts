@@ -114,6 +114,90 @@ export async function bootstrap(app: Application): Promise<{ prisma: PrismaClien
   const authMiddleware = createAuthMiddleware(tokenManager);
   const authRouter = createAuthRouter(authService);
   app.use(`${apiPrefix}/auth`, authRouter);
+
+  // Account management endpoints (change username/email/password, delete account)
+  app.post(`${apiPrefix}/auth/change-username`, authMiddleware, async (req: any, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) return res.status(401).json({ success: false, error: 'UNAUTHORIZED' });
+      const { username } = req.body;
+      if (!username || username.length < 3 || username.length > 50) {
+        return res.status(400).json({ success: false, error: 'INVALID_USERNAME', message: 'Username must be 3-50 characters' });
+      }
+      const existing = await prisma.user.findUnique({ where: { username } });
+      if (existing && existing.id !== userId) {
+        return res.status(409).json({ success: false, error: 'USERNAME_TAKEN', message: 'Username already taken' });
+      }
+      const user = await prisma.user.update({ where: { id: userId }, data: { username } });
+      res.json({ success: true, user: { id: user.id, username: user.username, email: user.email } });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: 'INTERNAL', message: err.message });
+    }
+  });
+
+  app.post(`${apiPrefix}/auth/change-email`, authMiddleware, async (req: any, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) return res.status(401).json({ success: false, error: 'UNAUTHORIZED' });
+      const { email, password } = req.body;
+      if (!email || !password) {
+        return res.status(400).json({ success: false, error: 'MISSING_FIELDS', message: 'Email and password are required' });
+      }
+      const currentUser = await prisma.user.findUnique({ where: { id: userId } });
+      if (!currentUser) return res.status(404).json({ success: false, error: 'NOT_FOUND' });
+      const valid = await passwordHasher.compare(password, currentUser.passwordHash);
+      if (!valid) return res.status(403).json({ success: false, error: 'WRONG_PASSWORD', message: 'Incorrect password' });
+      const existing = await prisma.user.findUnique({ where: { email } });
+      if (existing && existing.id !== userId) {
+        return res.status(409).json({ success: false, error: 'EMAIL_TAKEN', message: 'Email already in use' });
+      }
+      const user = await prisma.user.update({ where: { id: userId }, data: { email } });
+      res.json({ success: true, user: { id: user.id, username: user.username, email: user.email } });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: 'INTERNAL', message: err.message });
+    }
+  });
+
+  app.post(`${apiPrefix}/auth/change-password`, authMiddleware, async (req: any, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) return res.status(401).json({ success: false, error: 'UNAUTHORIZED' });
+      const { currentPassword, newPassword } = req.body;
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ success: false, error: 'MISSING_FIELDS', message: 'Current and new password are required' });
+      }
+      if (newPassword.length < 8) {
+        return res.status(400).json({ success: false, error: 'WEAK_PASSWORD', message: 'Password must be at least 8 characters' });
+      }
+      const currentUser = await prisma.user.findUnique({ where: { id: userId } });
+      if (!currentUser) return res.status(404).json({ success: false, error: 'NOT_FOUND' });
+      const valid = await passwordHasher.compare(currentPassword, currentUser.passwordHash);
+      if (!valid) return res.status(403).json({ success: false, error: 'WRONG_PASSWORD', message: 'Incorrect password' });
+      const hashed = await passwordHasher.hash(newPassword);
+      await prisma.user.update({ where: { id: userId }, data: { passwordHash: hashed } });
+      res.json({ success: true, message: 'Password changed' });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: 'INTERNAL', message: err.message });
+    }
+  });
+
+  app.post(`${apiPrefix}/auth/delete-account`, authMiddleware, async (req: any, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) return res.status(401).json({ success: false, error: 'UNAUTHORIZED' });
+      const { password } = req.body;
+      if (!password) return res.status(400).json({ success: false, error: 'MISSING_PASSWORD' });
+      const currentUser = await prisma.user.findUnique({ where: { id: userId } });
+      if (!currentUser) return res.status(404).json({ success: false, error: 'NOT_FOUND' });
+      const valid = await passwordHasher.compare(password, currentUser.passwordHash);
+      if (!valid) return res.status(403).json({ success: false, error: 'WRONG_PASSWORD', message: 'Incorrect password' });
+      // Soft delete: mark as inactive and set deletedAt
+      await prisma.user.update({ where: { id: userId }, data: { isActive: false, deletedAt: new Date() } });
+      res.json({ success: true, message: 'Account deleted' });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: 'INTERNAL', message: err.message });
+    }
+  });
   console.log('  ✅ Auth routes mounted');
 
   // ================================================================

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Heart, MessageCircle, Trash2 } from 'lucide-react';
+import { Heart, MessageCircle, Trash2, Users } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/stores/auth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -13,11 +13,17 @@ interface PostAuthor {
   profilePictureUrl: string | null;
 }
 
+interface PostGroup {
+  id: string;
+  name: string;
+}
+
 interface Post {
   id: string;
   content: string;
   authorId: string;
   author: PostAuthor;
+  group?: PostGroup | null;
   likesCount: number;
   commentsCount: number;
   createdAt: string;
@@ -139,6 +145,12 @@ export function PostCard({ post }: { post: Post }) {
                 </Button>
               )}
             </div>
+            {post.group && (
+              <div className="flex items-center gap-1 mt-0.5 text-xs text-stone-400">
+                <Users className="h-3 w-3" />
+                <span>{post.group.name}</span>
+              </div>
+            )}
             <p className="mt-1 text-stone-700 whitespace-pre-wrap break-words">{post.content}</p>
             <div className="mt-3 flex gap-4">
               <Button

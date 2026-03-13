@@ -26,7 +26,7 @@ export class ProfileRepository {
   /**
    * Find profile by user ID
    */
-  async findByUserId(userId: number): Promise<UserProfile | null> {
+  async findByUserId(userId: number | string): Promise<UserProfile | null> {
     const query = `
       SELECT
         id,
@@ -34,12 +34,11 @@ export class ProfileRepository {
         display_name AS "displayName",
         bio,
         avatar_url AS "avatarUrl",
-        avatar_s3_key AS "avatarS3Key",
-        cover_image_url AS "coverImageUrl",
-        cover_image_s3_key AS "coverImageS3Key",
+        cover_url AS "coverImageUrl",
         location,
         website,
-        is_public AS "isPublic",
+        NOT is_private AS "isPublic",
+        date_of_birth AS "dateOfBirth",
         created_at AS "createdAt",
         updated_at AS "updatedAt"
       FROM user_profiles
@@ -53,7 +52,7 @@ export class ProfileRepository {
   /**
    * Find profile by profile ID
    */
-  async findById(id: number): Promise<UserProfile | null> {
+  async findById(id: number | string): Promise<UserProfile | null> {
     const query = `
       SELECT
         id,
@@ -61,12 +60,11 @@ export class ProfileRepository {
         display_name AS "displayName",
         bio,
         avatar_url AS "avatarUrl",
-        avatar_s3_key AS "avatarS3Key",
-        cover_image_url AS "coverImageUrl",
-        cover_image_s3_key AS "coverImageS3Key",
+        cover_url AS "coverImageUrl",
         location,
         website,
-        is_public AS "isPublic",
+        NOT is_private AS "isPublic",
+        date_of_birth AS "dateOfBirth",
         created_at AS "createdAt",
         updated_at AS "updatedAt"
       FROM user_profiles
@@ -88,22 +86,19 @@ export class ProfileRepository {
         bio,
         location,
         website,
-        is_public,
-        created_at,
-        updated_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
+        is_private
+      ) VALUES ($1, $2, $3, $4, $5, $6)
       RETURNING
         id,
         user_id AS "userId",
         display_name AS "displayName",
         bio,
         avatar_url AS "avatarUrl",
-        avatar_s3_key AS "avatarS3Key",
-        cover_image_url AS "coverImageUrl",
-        cover_image_s3_key AS "coverImageS3Key",
+        cover_url AS "coverImageUrl",
         location,
         website,
-        is_public AS "isPublic",
+        NOT is_private AS "isPublic",
+        date_of_birth AS "dateOfBirth",
         created_at AS "createdAt",
         updated_at AS "updatedAt"
     `;
@@ -114,7 +109,7 @@ export class ProfileRepository {
       input.bio || null,
       input.location || null,
       input.website || null,
-      input.isPublic ?? true,
+      !(input.isPublic ?? true),
     ];
 
     const result: QueryResult = await this.pool.query(query, values);
@@ -124,7 +119,7 @@ export class ProfileRepository {
   /**
    * Update an existing profile
    */
-  async update(userId: number, input: UpdateProfileInput): Promise<UserProfile> {
+  async update(userId: number | string, input: UpdateProfileInput): Promise<UserProfile> {
     const fields: string[] = [];
     const values: (string | boolean | null)[] = [];
     let paramIndex = 1;
@@ -146,30 +141,22 @@ export class ProfileRepository {
       values.push(input.website);
     }
     if (input.isPublic !== undefined) {
-      fields.push(`is_public = $${paramIndex++}`);
-      values.push(input.isPublic);
+      fields.push(`is_private = $${paramIndex++}`);
+      values.push(!input.isPublic);
     }
     if (input.avatarUrl !== undefined) {
       fields.push(`avatar_url = $${paramIndex++}`);
       values.push(input.avatarUrl);
     }
-    if (input.avatarS3Key !== undefined) {
-      fields.push(`avatar_s3_key = $${paramIndex++}`);
-      values.push(input.avatarS3Key);
-    }
     if (input.coverImageUrl !== undefined) {
-      fields.push(`cover_image_url = $${paramIndex++}`);
+      fields.push(`cover_url = $${paramIndex++}`);
       values.push(input.coverImageUrl);
-    }
-    if (input.coverImageS3Key !== undefined) {
-      fields.push(`cover_image_s3_key = $${paramIndex++}`);
-      values.push(input.coverImageS3Key);
     }
 
     // Always update updated_at
     fields.push('updated_at = NOW()');
 
-    values.push(userId as unknown as string); // Add userId as last parameter
+    values.push(userId as unknown as string);
 
     const query = `
       UPDATE user_profiles
@@ -181,12 +168,11 @@ export class ProfileRepository {
         display_name AS "displayName",
         bio,
         avatar_url AS "avatarUrl",
-        avatar_s3_key AS "avatarS3Key",
-        cover_image_url AS "coverImageUrl",
-        cover_image_s3_key AS "coverImageS3Key",
+        cover_url AS "coverImageUrl",
         location,
         website,
-        is_public AS "isPublic",
+        NOT is_private AS "isPublic",
+        date_of_birth AS "dateOfBirth",
         created_at AS "createdAt",
         updated_at AS "updatedAt"
     `;
@@ -210,7 +196,7 @@ export class ProfileRepository {
   async searchByDisplayName(
     filters: ProfileSearchFilters
   ): Promise<{ profiles: UserProfile[]; total: number }> {
-    const conditions: string[] = ['is_public = true'];
+    const conditions: string[] = ['is_private = false'];
     const values: (string | number | boolean)[] = [];
     let paramIndex = 1;
 
@@ -233,8 +219,8 @@ export class ProfileRepository {
 
     // Filter by isPublic
     if (filters.isPublic !== undefined) {
-      conditions.push(`is_public = $${paramIndex++}`);
-      values.push(filters.isPublic);
+      conditions.push(`is_private = $${paramIndex++}`);
+      values.push(!filters.isPublic);
     }
 
     // Filter by hasAvatar
@@ -274,12 +260,11 @@ export class ProfileRepository {
         display_name AS "displayName",
         bio,
         avatar_url AS "avatarUrl",
-        avatar_s3_key AS "avatarS3Key",
-        cover_image_url AS "coverImageUrl",
-        cover_image_s3_key AS "coverImageS3Key",
+        cover_url AS "coverImageUrl",
         location,
         website,
-        is_public AS "isPublic",
+        NOT is_private AS "isPublic",
+        date_of_birth AS "dateOfBirth",
         created_at AS "createdAt",
         updated_at AS "updatedAt"
       FROM user_profiles

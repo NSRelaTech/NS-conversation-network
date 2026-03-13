@@ -95,12 +95,23 @@ Groups get a new content type: "conversations." A conversation is a structured d
 - AI-generated but flagged as such (AI assistive, never mediating)
 - Multiple analyses possible (different analyzers produce different views)
 
-### UX
+### UX — Canvas deliberation interface
 
-- Group feed shows posts and conversation cards side by side
-- Conversation card: title, status, participation count, active round
-- Conversation view: round-by-round navigation, submit responses, see results
+Deliberation is visualized on spatial whiteboards (React Flow, MIT license), not threaded feeds. See `docs/superpowers/specs/2026-03-13-canvas-deliberation-design.md` for full spec.
+
+**Three-layer model:**
+
+1. **Feed** — unchanged casual social layer. Posts can reference conversations; clicking opens the conversation canvas (not a comment thread).
+2. **Group canvas** — top-level group view. Conversation sessions as cards on an infinite whiteboard, spatially arranged by theme. "What is this community deliberating on?"
+3. **Conversation canvas** — inside a deliberation session. Participant responses as sticky notes, AI synthesis visually clusters and connects them. A spatial map of perspectives.
+
+**Canvas data model:** 4 new tables — `canvases`, `canvas_cards`, `canvas_positions`, `canvas_connections`. Cards are lightweight wrappers pointing to real data (responses, themes, sessions). Positions support default layouts (admin/system) with personal overrides per user.
+
+**Adapter pattern:** Each deliberation tool (native, Harmonica, Polis, Agora) implements an adapter that translates its output into canvas primitives (cards, positions, connections). Phase 2 ships `NativeAdapter` only; external adapters arrive in Phase 3.
+
 - Group admins create and manage conversations
+- Admins set default canvas layout; users can rearrange their own view
+- List view fallback available (default on mobile)
 
 ### Automatic translation
 
@@ -140,6 +151,15 @@ Conversations, responses, and analyses become portable AT Protocol records. Exte
 - Harmonica: creates session → writes Plan + Collect + Analyze records to our PDS
 - Polis: runs opinion mapping → writes Analyze records alongside native analysis
 - Any DDS-compliant tool: discovers conversations via the standard, participates with just a DID
+
+### Canvas adapter formalization
+
+- Adapter interface (`CanvasAdapter`) becomes part of DDS tool integration contract
+- `HarmonicaAdapter` — first external adapter, maps synthesis themes to spatial clusters
+- `PolisAdapter` — maps Polis opinion groups to 2D spatial layout
+- `AgoraAdapter` — maps proposals + arguments to cards + connections
+- Adapter sync mechanism: pull tool output, diff cards, update canvas without disrupting user-arranged positions
+- Canvas data mirrored to AT Protocol records alongside deliberation data
 
 ### Federation
 

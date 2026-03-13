@@ -36,7 +36,7 @@ export function GroupDetailPage() {
   });
 
   const isMember = membersData?.members?.some((m: any) => m.userId === userId) ?? false;
-  const isAdmin = membersData?.members?.some((m: any) => m.userId === userId && m.role === 'ADMIN') ?? false;
+  const isAdmin = membersData?.members?.some((m: any) => m.userId === userId && (m.role === 'owner' || m.role === 'ADMIN')) ?? false;
 
   const updateGroup = useMutation({
     mutationFn: (data: { name?: string; description?: string }) =>

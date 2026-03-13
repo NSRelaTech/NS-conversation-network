@@ -87,6 +87,7 @@ export type FeedSort = 'latest' | 'popular';
 
 export interface FeedQuery {
   userId?: string;
+  viewerId?: string;
   followingIds?: string[];
   groupIds?: string[];
   groupId?: string;

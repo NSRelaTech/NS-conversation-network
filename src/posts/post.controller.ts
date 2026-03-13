@@ -239,6 +239,7 @@ export class PostController {
   ): Promise<void> => {
     try {
       const { userId } = req.params;
+      const viewerId = req.user?.id;
       const cursor = req.query.cursor as string | undefined;
       const limit = parseInt(req.query.limit as string) || 20;
       const sort = req.query.sort as FeedSort | undefined;
@@ -247,7 +248,8 @@ export class PostController {
         userId,
         cursor,
         limit,
-        sort
+        sort,
+        viewerId
       );
 
       res.json({

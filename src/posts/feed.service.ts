@@ -185,7 +185,8 @@ export class FeedService {
     profileUserId: string,
     cursor?: string,
     limit: number = POST_CONSTANTS.DEFAULT_PAGE_SIZE,
-    sort?: FeedSort
+    sort?: FeedSort,
+    viewerId?: string
   ): Promise<FeedResult> {
     // Validate limit
     const safeLimit = Math.min(limit, POST_CONSTANTS.MAX_PAGE_SIZE);
@@ -208,6 +209,7 @@ export class FeedService {
     // Fetch posts
     const posts = await this.feedRepository.getUserProfileFeed({
       userId: profileUserId,
+      viewerId,
       cursor: cursorDate,
       limit: safeLimit + 1,
       sort,

@@ -173,7 +173,7 @@ export class FeedRepository {
    * Posts from a specific user
    */
   async getUserProfileFeed(query: FeedQuery): Promise<FeedItem[]> {
-    const { userId, cursor, limit } = query;
+    const { userId, viewerId, cursor, limit } = query;
     const cursorTimestamp = cursor || new Date();
 
     const sql = `
@@ -201,11 +201,13 @@ export class FeedRepository {
           WHEN g.id IS NOT NULL THEN json_build_object('id', g.id, 'name', g.name)
           ELSE NULL
         END AS group,
-        (p.reaction_count + p.comment_count * 2) AS "engagementScore"
+        (p.reaction_count + p.comment_count * 2) AS "engagementScore",
+        pr.type AS "userReaction"
       FROM posts p
       INNER JOIN users u ON p.author_id = u.id
       LEFT JOIN user_profiles up ON u.id = up.user_id
       LEFT JOIN groups g ON p.group_id = g.id
+      LEFT JOIN post_reactions pr ON pr.post_id = p.id AND pr.user_id = $4
       WHERE
         p.author_id = $1
         AND p.deleted_at IS NULL
@@ -216,7 +218,7 @@ export class FeedRepository {
       LIMIT $3
     `;
 
-    const result = await this.pool.query(sql, [userId, cursorTimestamp, limit]);
+    const result = await this.pool.query(sql, [userId, cursorTimestamp, limit, viewerId || null]);
     return result.rows.map((row) => ({
       ...row,
       isDeleted: false,

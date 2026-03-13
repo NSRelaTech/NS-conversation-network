@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { KeyRound, Mail, AtSign, Trash2, LogOut } from 'lucide-react';
+import { User, KeyRound, Mail, AtSign, Trash2, LogOut } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,6 +16,21 @@ export function SettingsPage() {
   return (
     <div className="mx-auto max-w-lg space-y-4">
       <h1 className="text-xl font-semibold text-stone-900">Settings</h1>
+
+      <Card>
+        <CardContent className="pt-6">
+          <Link
+            to={`/users/${user?.id}`}
+            className="flex items-center gap-3 rounded-md px-3 py-2.5 hover:bg-stone-50 transition-colors"
+          >
+            <User className="h-4 w-4 text-stone-500" />
+            <div>
+              <p className="text-sm font-medium text-stone-900">View profile</p>
+              <p className="text-xs text-stone-400">See how others see you</p>
+            </div>
+          </Link>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader className="pb-2">

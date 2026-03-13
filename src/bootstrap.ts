@@ -37,6 +37,18 @@ import {
 
 // Groups
 import { GroupMemberRepository } from './groups/group-member.repository';
+import { GroupService } from './groups/group.service';
+import { GroupController } from './groups/group.controller';
+import { RBACService } from './groups/rbac.service';
+import { MembershipService } from './groups/membership.service';
+import { createGroupRoutes } from './groups/group.routes';
+import {
+  PrismaGroupRepository,
+  PrismaMemberRepository,
+  NoopRequestRepository,
+  NoopPermissionCache,
+  NoopAuditLogger,
+} from './groups/prisma-group.repository';
 
 // Social
 import { FollowRepository } from './social/follow.repository';
@@ -157,6 +169,33 @@ export async function bootstrap(app: Application): Promise<{ prisma: PrismaClien
   const followController = new FollowController(followService, blockService);
   app.use(`${apiPrefix}/social`, createSocialRoutes(followController, authMiddleware));
   console.log('  ✅ Social routes mounted');
+
+  // ================================================================
+  // Groups module (Prisma-backed CRUD + membership)
+  // ================================================================
+  const prismaGroupRepository = new PrismaGroupRepository(prisma);
+  const prismaMemberRepository = new PrismaMemberRepository(prisma);
+  const noopRequestRepository = new NoopRequestRepository();
+  const noopPermissionCache = new NoopPermissionCache();
+  const noopAuditLogger = new NoopAuditLogger();
+
+  const rbacService = new RBACService(prismaMemberRepository as any, noopPermissionCache as any);
+  const membershipService = new MembershipService(
+    prismaMemberRepository as any,
+    noopRequestRepository as any,
+    prismaGroupRepository as any,
+    noopAuditLogger,
+  );
+  const groupService = new GroupService(
+    prismaGroupRepository,
+    prismaMemberRepository as any,
+    rbacService,
+    membershipService,
+    noopAuditLogger,
+  );
+  const groupController = new GroupController(groupService);
+  app.use(`${apiPrefix}/groups`, authMiddleware, createGroupRoutes(groupController));
+  console.log('  ✅ Group CRUD routes mounted');
 
   // ================================================================
   // 404 Handler (must come after all routes)

@@ -76,7 +76,7 @@ export function GroupDetailPage() {
 
       {/* Group feed */}
       <div className="space-y-4">
-        {isMember && <CreatePostForm />}
+        {isMember && <CreatePostForm groupId={group.id} />}
 
         {posts.map((post: any) => (
           <PostCard key={post.id} post={post} />

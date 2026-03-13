@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 
-export function CreatePostForm() {
+export function CreatePostForm({ groupId }: { groupId?: string } = {}) {
   const [content, setContent] = useState('');
   const queryClient = useQueryClient();
 
@@ -13,11 +13,18 @@ export function CreatePostForm() {
     mutationFn: () =>
       api<any>('/posts', {
         method: 'POST',
-        body: JSON.stringify({ content, visibility: 'public' }),
+        body: JSON.stringify({
+          content,
+          visibility: groupId ? 'group' : 'public',
+          ...(groupId && { groupId }),
+        }),
       }),
     onSuccess: () => {
       setContent('');
       queryClient.invalidateQueries({ queryKey: ['feed'] });
+      if (groupId) {
+        queryClient.invalidateQueries({ queryKey: ['group-feed', groupId] });
+      }
     },
   });
 

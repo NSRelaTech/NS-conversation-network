@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Heart, MessageCircle } from 'lucide-react';
+import { Heart, MessageCircle, Trash2 } from 'lucide-react';
 import { api } from '@/lib/api';
+import { useAuthStore } from '@/stores/auth';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -35,6 +36,8 @@ function timeAgo(dateStr: string): string {
 
 export function PostCard({ post }: { post: Post }) {
   const queryClient = useQueryClient();
+  const currentUserId = useAuthStore((s) => s.user?.id);
+  const isOwner = currentUserId === post.authorId;
   const [liked, setLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(post.likesCount);
 
@@ -48,12 +51,29 @@ export function PostCard({ post }: { post: Post }) {
       setLiked((prev) => !prev);
       setLikesCount((prev) => liked ? prev - 1 : prev + 1);
     },
+    onSuccess: (data) => {
+      const action = data?.data?.action;
+      if (action === 'added') {
+        setLiked(true);
+      } else if (action === 'removed') {
+        setLiked(false);
+      }
+    },
     onError: () => {
       setLiked((prev) => !prev);
       setLikesCount(post.likesCount);
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['feed'] });
+    },
+  });
+
+  const deletePost = useMutation({
+    mutationFn: () =>
+      api<any>(`/posts/${post.id}`, { method: 'DELETE' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['feed'] });
+      queryClient.invalidateQueries({ queryKey: ['group-feed'] });
     },
   });
 
@@ -72,6 +92,19 @@ export function PostCard({ post }: { post: Post }) {
             <div className="flex items-center gap-2">
               <span className="font-medium text-stone-900">{post.author.username}</span>
               <span className="text-sm text-stone-400">{timeAgo(post.createdAt)}</span>
+              {isOwner && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="ml-auto h-7 w-7 p-0 text-stone-400 hover:text-red-500"
+                  onClick={() => {
+                    if (confirm('Delete this post?')) deletePost.mutate();
+                  }}
+                  disabled={deletePost.isPending}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              )}
             </div>
             <p className="mt-1 text-stone-700 whitespace-pre-wrap break-words">{post.content}</p>
             <div className="mt-3 flex gap-4">

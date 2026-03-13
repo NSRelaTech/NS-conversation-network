@@ -73,15 +73,25 @@ community-social-network/
 | Route | Page | Description |
 |-------|------|-------------|
 | `/auth/login` | Login | Email + password, link to register |
-| `/auth/register` | Register | Username, email, password, confirm |
+| `/auth/register` | Register | Email, username, password, confirm |
 | `/auth/verify-email/:token` | Email verification | Landing page after clicking email link |
 
-**Components:** `LoginForm`, `RegisterForm`, `AuthLayout` (centered card layout)
+**Components:** `LoginForm`, `RegisterForm`, `VerifyEmailPage`, `AuthLayout` (centered card layout)
+
+**Backend fix required — registration:** The `RegisterRequest` type in `auth.types.ts` only has `{ email, password }` but the Prisma `User` model requires `username` (unique, NOT NULL). Must add `username` to `RegisterRequest`, `CreateUserData`, and the auth service's create flow. Without this, registration throws a Postgres constraint violation.
+
+**Backend fix required — userId types:** `auth.types.ts` declares `User.id` as `number` but Prisma uses UUID strings everywhere. Must change auth types to use `string` for all IDs. Also: auth middleware sets `req.user.userId` but `PostController` reads `req.user?.id` — reconcile to a single shape (use `req.user.id: string`).
+
+**Verify email page behavior:** On mount, extract `:token` from URL params, POST to `/api/v1/auth/verify-email` with `{ token }` in body. Use a `useEffect` with ref guard to prevent double-invocation in React StrictMode. Show loading spinner → success message with link to login → or error message.
 
 **Behavior:**
-- JWT stored in memory (Zustand), refresh token in httpOnly cookie
+- JWT access token (15min) stored in memory (Zustand) — not localStorage
+- Refresh token (7d) also stored in Zustand memory (the backend returns it in response body, not as httpOnly cookie — no cookie-setting logic exists in auth controller)
+- `apiClient` auto-refreshes on 401 using stored refresh token
 - Redirect to feed after login
 - Protected routes redirect to `/auth/login`
+
+**Note:** The backend's `AuthService.login()` returns `{ accessToken, refreshToken, expiresIn }` in the response body. There is no httpOnly cookie mechanism. For MVP we store both tokens in Zustand (memory). This means tokens are lost on page refresh — acceptable for MVP. A future improvement would add Set-Cookie in the backend auth controller.
 
 ### 2. Feed (`/`)
 
@@ -102,7 +112,7 @@ community-social-network/
 | Route | Page | Description |
 |-------|------|-------------|
 | `/groups` | Browse groups | Grid of group cards, search |
-| `/groups/:slug` | Group detail | Group info, members, posts feed |
+| `/groups/:slug` | Group detail | Group info, members, posts feed (backend must support slug lookup, not just UUID) |
 | `/groups/create` | Create group | Name, description, privacy |
 
 **Components:** `GroupCard`, `GroupHeader`, `GroupPostFeed`, `CreateGroupForm`, `MemberList`, `JoinLeaveButton`
@@ -174,30 +184,35 @@ The existing backend has all modules coded but `app.ts` returns 503 for all rout
 
 - Add Prisma client initialization in `src/index.ts`
 - Connect to Neon Postgres via `DATABASE_URL`
-- Redis connection for caching/sessions (can be optional for MVP — skip Redis if it simplifies deployment)
+- Redis: **not optional** — `FeedService` requires `CacheService` (Redis wrapper) as a constructor param with no fallback. For MVP, implement a noop `CacheService` that returns cache misses for all reads and silently drops writes. This lets the feed work without Redis. Wire real Redis later when scaling.
 
 ### 2. Route Wiring
 
-Replace the 503 placeholder routes in `app.ts` with actual route handlers:
+Replace the 503 placeholder routes in `app.ts` with actual route handlers. **Important:** `post.routes.ts` exports multiple router factories — feed, group feed, and user profile routes need separate mount points:
 
 ```typescript
 // Replace placeholders with:
 app.use(`${apiPrefix}/auth`, authRoutes);
-app.use(`${apiPrefix}/profiles`, profileRoutes);
+app.use(`${apiPrefix}/profiles`, createProfileRoutes(authMiddleware)); // NOT the default export
 app.use(`${apiPrefix}/posts`, postRoutes);
+app.use(`${apiPrefix}/feed`, feedRoutes);           // from createFeedRoutes()
 app.use(`${apiPrefix}/groups`, groupRoutes);
+app.use(`${apiPrefix}/groups`, groupFeedRoutes);     // from createGroupFeedRoutes()
+app.use(`${apiPrefix}/users`, userProfileRoutes);    // from createUserProfileRoutes()
 app.use(`${apiPrefix}/social`, socialRoutes);
 // notifications and admin can stay as 503 for MVP
 ```
+
+**Warning:** The default export of `profile.routes.ts` (`profileRoutes`) creates a `ProfileController()` with no arguments, bypassing dependency injection. Always use the named `createProfileRoutes(authMiddleware)` factory with a properly wired controller.
 
 ### 3. Dependency Injection
 
 Each module uses constructor injection (service → repository → Prisma). Need to:
 - Instantiate Prisma client
 - Wire up repositories with Prisma
-- Wire up services with repositories
+- Wire up services with repositories (including a noop `CacheService` — see Redis note below)
 - Wire up controllers with services
-- Pass controllers to route factories
+- Pass controllers to route factories (use factory functions, not default exports)
 
 ### 4. Database Setup
 
@@ -205,7 +220,21 @@ Each module uses constructor injection (service → repository → Prisma). Need
 - Run `prisma migrate dev` to create tables
 - Verify with `prisma studio`
 
-### 5. CORS Configuration
+### 5. Backend Type/Logic Fixes
+
+These bugs in the existing backend code must be fixed during wiring:
+
+1. **Auth types — `userId` is `number`, should be `string` (UUID):** `auth.types.ts` declares `User.id: number`, `AccessTokenPayload.userId: number`, etc. Prisma schema uses UUID strings. Fix all auth types to use `string`.
+
+2. **Auth types — `req.user` shape mismatch:** Auth middleware sets `req.user.userId` but `PostController` reads `req.user?.id`. The Express global type augmentation in `auth.routes.ts` declares `userId: number`. Reconcile to `req.user = { id: string, email: string, role: string }` everywhere.
+
+3. **Registration — missing `username`:** `RegisterRequest` only has `{ email, password }`. Add `username: string` to `RegisterRequest` and pass it through to `CreateUserData` / Prisma `User.create()`.
+
+4. **Group lookup — slug support:** `group.routes.ts` uses `:groupId` param. `GroupService.getGroup()` must detect whether the param is a UUID or a slug and query accordingly (`findUnique({ where: { id } })` vs `findUnique({ where: { slug } })`). Needed for `/groups/:slug` frontend routes.
+
+5. **Noop CacheService:** Create `src/utils/noop-cache.service.ts` implementing the `CacheService` interface but returning cache misses / no-ops. Pass to `FeedService` constructor.
+
+### 6. CORS Configuration
 
 Update `CORS_ORIGIN` in backend to allow frontend dev server (`http://localhost:5173`) and production frontend URL.
 
@@ -266,7 +295,7 @@ async function apiClient<T>(path: string, options?: RequestInit): Promise<T> {
 - **Railway:** Two services in one project:
   - Backend service: Node.js, builds from root, `npm run build && npm start`
   - Frontend service: Static site or Node.js, builds from `frontend/`, `npm run build`, serves `dist/`
-- Redis: Skip for MVP (use in-memory fallbacks where possible, or Railway Redis add-on if needed)
+- Redis: Skipped for MVP — noop `CacheService` used instead (see backend work section). Add Railway Redis add-on when scaling.
 
 ## Success Criteria
 

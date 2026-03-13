@@ -6,6 +6,7 @@ import { ProfileHeader } from '@/components/profiles/ProfileHeader';
 import { PostCard } from '@/components/feed/PostCard';
 import { FeedSortToggle, type FeedSort } from '@/components/feed/FeedSortToggle';
 import { Button } from '@/components/ui/button';
+import { FileText } from 'lucide-react';
 
 export function ProfilePage() {
   const [sort, setSort] = useState<FeedSort>('latest');
@@ -52,7 +53,13 @@ export function ProfilePage() {
       ))}
 
       {posts.length === 0 && (
-        <p className="text-center text-stone-400 py-8">No posts yet.</p>
+        <div className="flex flex-col items-center py-12 text-center">
+          <div className="rounded-full bg-stone-100 p-4 mb-4">
+            <FileText className="h-8 w-8 text-stone-400" />
+          </div>
+          <p className="text-stone-600 font-medium">No posts yet</p>
+          <p className="text-sm text-stone-400 mt-1">Posts will appear here once published</p>
+        </div>
       )}
 
       {hasNextPage && (

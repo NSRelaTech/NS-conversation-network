@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Users, Pencil, Trash2, MoreHorizontal } from 'lucide-react';
+import { Users, Pencil, Trash2, MoreHorizontal, MessageCircle } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/stores/auth';
 import { PostCard } from '@/components/feed/PostCard';
@@ -216,7 +216,15 @@ export function GroupDetailPage() {
         ))}
 
         {posts.length === 0 && (
-          <p className="text-center text-stone-400 py-8">No posts in this group yet.</p>
+          <div className="flex flex-col items-center py-12 text-center">
+            <div className="rounded-full bg-stone-100 p-4 mb-4">
+              <MessageCircle className="h-8 w-8 text-stone-400" />
+            </div>
+            <p className="text-stone-600 font-medium">No posts in this group yet</p>
+            <p className="text-sm text-stone-400 mt-1">
+              {isMember ? 'Be the first to start a conversation' : 'Join this group to start posting'}
+            </p>
+          </div>
         )}
 
         {hasNextPage && (

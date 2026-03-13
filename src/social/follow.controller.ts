@@ -15,17 +15,10 @@ import { IFollowService, IBlockService, SocialError } from './social.types';
  */
 interface AuthenticatedRequest extends Request {
   user?: {
-    userId: number;
+    id: string;
     email: string;
-    emailVerified: boolean;
+    role: string;
   };
-}
-
-/**
- * Helper to convert userId to string for service layer.
- */
-function getUserIdString(userId: number): string {
-  return String(userId);
 }
 
 export class FollowController {
@@ -44,10 +37,10 @@ export class FollowController {
     next: NextFunction
   ): Promise<void> {
     try {
-      const userIdNum = req.user?.userId;
+      const userId = req.user?.id;
       const followingId = req.params.userId;
 
-      if (!userIdNum) {
+      if (!userId) {
         res.status(401).json({
           code: 'UNAUTHORIZED',
           message: 'Authentication required',
@@ -63,8 +56,7 @@ export class FollowController {
         return;
       }
 
-      const followerId = getUserIdString(userIdNum);
-      const result = await this.followService.follow(followerId, followingId);
+      const result = await this.followService.follow(userId, followingId);
 
       res.status(200).json({
         status: result.status,
@@ -85,10 +77,10 @@ export class FollowController {
     next: NextFunction
   ): Promise<void> {
     try {
-      const userIdNum = req.user?.userId;
+      const userId = req.user?.id;
       const followingId = req.params.userId;
 
-      if (!userIdNum) {
+      if (!userId) {
         res.status(401).json({
           code: 'UNAUTHORIZED',
           message: 'Authentication required',
@@ -104,8 +96,7 @@ export class FollowController {
         return;
       }
 
-      const followerId = getUserIdString(userIdNum);
-      await this.followService.unfollow(followerId, followingId);
+      await this.followService.unfollow(userId, followingId);
 
       res.status(204).send();
     } catch (error) {
@@ -123,10 +114,10 @@ export class FollowController {
     next: NextFunction
   ): Promise<void> {
     try {
-      const userIdNum = req.user?.userId;
+      const userId = req.user?.id;
       const requesterId = req.params.userId;
 
-      if (!userIdNum) {
+      if (!userId) {
         res.status(401).json({
           code: 'UNAUTHORIZED',
           message: 'Authentication required',
@@ -142,8 +133,7 @@ export class FollowController {
         return;
       }
 
-      const ownerId = getUserIdString(userIdNum);
-      const result = await this.followService.approveFollowRequest(ownerId, requesterId);
+      const result = await this.followService.approveFollowRequest(userId, requesterId);
 
       res.status(200).json({
         follow: result.follow,
@@ -164,10 +154,10 @@ export class FollowController {
     next: NextFunction
   ): Promise<void> {
     try {
-      const userIdNum = req.user?.userId;
+      const userId = req.user?.id;
       const requesterId = req.params.userId;
 
-      if (!userIdNum) {
+      if (!userId) {
         res.status(401).json({
           code: 'UNAUTHORIZED',
           message: 'Authentication required',
@@ -183,8 +173,7 @@ export class FollowController {
         return;
       }
 
-      const ownerId = getUserIdString(userIdNum);
-      await this.followService.rejectFollowRequest(ownerId, requesterId);
+      await this.followService.rejectFollowRequest(userId, requesterId);
 
       res.status(204).send();
     } catch (error) {
@@ -262,11 +251,11 @@ export class FollowController {
     next: NextFunction
   ): Promise<void> {
     try {
-      const userIdNum = req.user?.userId;
+      const userId = req.user?.id;
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 20;
 
-      if (!userIdNum) {
+      if (!userId) {
         res.status(401).json({
           code: 'UNAUTHORIZED',
           message: 'Authentication required',
@@ -274,7 +263,6 @@ export class FollowController {
         return;
       }
 
-      const userId = getUserIdString(userIdNum);
       const result = await this.followService.getPendingRequests(userId, { page, limit });
 
       res.status(200).json(result);
@@ -293,10 +281,10 @@ export class FollowController {
     next: NextFunction
   ): Promise<void> {
     try {
-      const userIdNum = req.user?.userId;
+      const userId = req.user?.id;
       const targetId = req.params.userId;
 
-      if (!userIdNum) {
+      if (!userId) {
         res.status(401).json({
           code: 'UNAUTHORIZED',
           message: 'Authentication required',
@@ -312,7 +300,6 @@ export class FollowController {
         return;
       }
 
-      const userId = getUserIdString(userIdNum);
       const result = await this.followService.getRelationship(userId, targetId);
 
       res.status(200).json(result);
@@ -331,11 +318,11 @@ export class FollowController {
     next: NextFunction
   ): Promise<void> {
     try {
-      const userIdNum = req.user?.userId;
+      const userId = req.user?.id;
       const blockedId = req.params.userId;
       const reason = req.body.reason as string | undefined;
 
-      if (!userIdNum) {
+      if (!userId) {
         res.status(401).json({
           code: 'UNAUTHORIZED',
           message: 'Authentication required',
@@ -351,8 +338,7 @@ export class FollowController {
         return;
       }
 
-      const blockerId = getUserIdString(userIdNum);
-      const result = await this.blockService.block(blockerId, blockedId, reason);
+      const result = await this.blockService.block(userId, blockedId, reason);
 
       res.status(200).json({
         success: result.success,
@@ -373,10 +359,10 @@ export class FollowController {
     next: NextFunction
   ): Promise<void> {
     try {
-      const userIdNum = req.user?.userId;
+      const userId = req.user?.id;
       const blockedId = req.params.userId;
 
-      if (!userIdNum) {
+      if (!userId) {
         res.status(401).json({
           code: 'UNAUTHORIZED',
           message: 'Authentication required',
@@ -392,8 +378,7 @@ export class FollowController {
         return;
       }
 
-      const blockerId = getUserIdString(userIdNum);
-      await this.blockService.unblock(blockerId, blockedId);
+      await this.blockService.unblock(userId, blockedId);
 
       res.status(204).send();
     } catch (error) {
@@ -411,11 +396,11 @@ export class FollowController {
     next: NextFunction
   ): Promise<void> {
     try {
-      const userIdNum = req.user?.userId;
+      const userId = req.user?.id;
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 20;
 
-      if (!userIdNum) {
+      if (!userId) {
         res.status(401).json({
           code: 'UNAUTHORIZED',
           message: 'Authentication required',
@@ -423,7 +408,6 @@ export class FollowController {
         return;
       }
 
-      const userId = getUserIdString(userIdNum);
       const result = await this.blockService.getBlocks(userId, { page, limit });
 
       res.status(200).json(result);
@@ -442,10 +426,10 @@ export class FollowController {
     next: NextFunction
   ): Promise<void> {
     try {
-      const userIdNum = req.user?.userId;
+      const userId = req.user?.id;
       const targetId = req.params.userId;
 
-      if (!userIdNum) {
+      if (!userId) {
         res.status(401).json({
           code: 'UNAUTHORIZED',
           message: 'Authentication required',
@@ -461,7 +445,6 @@ export class FollowController {
         return;
       }
 
-      const userId = getUserIdString(userIdNum);
       const isBlocked = await this.blockService.isBlocked(userId, targetId);
 
       res.status(200).json({ isBlocked });

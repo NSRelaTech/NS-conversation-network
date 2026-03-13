@@ -25,10 +25,10 @@ export interface RedisClient {
 
 export interface RateLimiter {
   checkLimit(type: string, identifier: string): Promise<RateLimitResult>;
-  checkAccountLockout(userId: number): Promise<AccountLockoutResult>;
-  setAccountLockout(userId: number, duration: number): Promise<void>;
-  incrementFailedAttempt(userId: number): Promise<FailedAttemptResult>;
-  resetFailedAttempts(userId: number): Promise<void>;
+  checkAccountLockout(userId: string): Promise<AccountLockoutResult>;
+  setAccountLockout(userId: string, duration: number): Promise<void>;
+  incrementFailedAttempt(userId: string): Promise<FailedAttemptResult>;
+  resetFailedAttempts(userId: string): Promise<void>;
 }
 
 export class RedisRateLimiter implements RateLimiter {
@@ -87,7 +87,7 @@ export class RedisRateLimiter implements RateLimiter {
    * @param userId - User ID to check
    * @returns AccountLockoutResult with lock status
    */
-  async checkAccountLockout(userId: number): Promise<AccountLockoutResult> {
+  async checkAccountLockout(userId: string): Promise<AccountLockoutResult> {
     const key = `lockout:account:${userId}`;
     const lockoutData = await this.redis.get(key);
 
@@ -121,7 +121,7 @@ export class RedisRateLimiter implements RateLimiter {
    * @param userId - User ID to lock
    * @param duration - Lockout duration in seconds
    */
-  async setAccountLockout(userId: number, duration: number): Promise<void> {
+  async setAccountLockout(userId: string, duration: number): Promise<void> {
     const key = `lockout:account:${userId}`;
     const lockedUntil = Date.now() + duration * 1000;
 
@@ -143,7 +143,7 @@ export class RedisRateLimiter implements RateLimiter {
    * @param userId - User ID
    * @returns FailedAttemptResult with current count and lock status
    */
-  async incrementFailedAttempt(userId: number): Promise<FailedAttemptResult> {
+  async incrementFailedAttempt(userId: string): Promise<FailedAttemptResult> {
     const key = `failed:attempts:${userId}`;
 
     // Increment counter
@@ -166,7 +166,7 @@ export class RedisRateLimiter implements RateLimiter {
    *
    * @param userId - User ID
    */
-  async resetFailedAttempts(userId: number): Promise<void> {
+  async resetFailedAttempts(userId: string): Promise<void> {
     const key = `failed:attempts:${userId}`;
     await this.redis.del(key);
   }
@@ -192,8 +192,8 @@ export class RedisRateLimiter implements RateLimiter {
  */
 export class InMemoryRateLimiter implements RateLimiter {
   private requests: Map<string, number[]> = new Map();
-  private lockouts: Map<number, Date> = new Map();
-  private failedAttempts: Map<number, number> = new Map();
+  private lockouts: Map<string, Date> = new Map();
+  private failedAttempts: Map<string, number> = new Map();
   private readonly config: AuthConfig;
 
   constructor(config: Partial<AuthConfig> = {}) {
@@ -230,7 +230,7 @@ export class InMemoryRateLimiter implements RateLimiter {
     };
   }
 
-  async checkAccountLockout(userId: number): Promise<AccountLockoutResult> {
+  async checkAccountLockout(userId: string): Promise<AccountLockoutResult> {
     const lockedUntil = this.lockouts.get(userId);
 
     if (!lockedUntil) {
@@ -246,12 +246,12 @@ export class InMemoryRateLimiter implements RateLimiter {
     return { locked: false };
   }
 
-  async setAccountLockout(userId: number, duration: number): Promise<void> {
+  async setAccountLockout(userId: string, duration: number): Promise<void> {
     const lockedUntil = new Date(Date.now() + duration * 1000);
     this.lockouts.set(userId, lockedUntil);
   }
 
-  async incrementFailedAttempt(userId: number): Promise<FailedAttemptResult> {
+  async incrementFailedAttempt(userId: string): Promise<FailedAttemptResult> {
     const current = this.failedAttempts.get(userId) || 0;
     const attempts = current + 1;
     this.failedAttempts.set(userId, attempts);
@@ -262,7 +262,7 @@ export class InMemoryRateLimiter implements RateLimiter {
     };
   }
 
-  async resetFailedAttempts(userId: number): Promise<void> {
+  async resetFailedAttempts(userId: string): Promise<void> {
     this.failedAttempts.delete(userId);
   }
 

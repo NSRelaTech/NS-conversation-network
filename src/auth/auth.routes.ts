@@ -128,9 +128,9 @@ export function createAuthMiddleware(
 
       // Attach user info to request
       (req as any).user = {
-        userId: payload.userId,
+        id: payload.userId,
         email: payload.email,
-        emailVerified: payload.emailVerified,
+        role: 'USER',
       };
 
       next();
@@ -158,9 +158,9 @@ declare global {
   namespace Express {
     interface Request {
       user?: {
-        userId: number;
+        id: string;
         email: string;
-        emailVerified: boolean;
+        role: string;
       };
     }
   }

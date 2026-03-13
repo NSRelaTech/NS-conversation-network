@@ -19,8 +19,9 @@ import {
 // Extend Express Request to include user info from auth middleware
 interface AuthenticatedRequest extends Request {
   user?: {
-    id: number;
+    id: string;
     email: string;
+    role: string;
   };
 }
 
@@ -104,8 +105,8 @@ export class ProfileController {
     next: NextFunction
   ): Promise<void> {
     try {
-      const userId = parseInt(req.params.userId, 10);
-      if (isNaN(userId)) {
+      const userId = req.params.userId;
+      if (!userId) {
         res.status(400).json({
           success: false,
           error: {
@@ -177,8 +178,8 @@ export class ProfileController {
     next: NextFunction
   ): Promise<void> {
     try {
-      const userId = parseInt(req.params.userId, 10);
-      if (isNaN(userId)) {
+      const userId = req.params.userId;
+      if (!userId) {
         res.status(400).json({
           success: false,
           error: {
@@ -240,8 +241,8 @@ export class ProfileController {
     next: NextFunction
   ): Promise<void> {
     try {
-      const userId = parseInt(req.params.userId, 10);
-      if (isNaN(userId)) {
+      const userId = req.params.userId;
+      if (!userId) {
         res.status(400).json({
           success: false,
           error: {
@@ -334,8 +335,8 @@ export class ProfileController {
     next: NextFunction
   ): Promise<void> {
     try {
-      const userId = parseInt(req.params.userId, 10);
-      if (isNaN(userId)) {
+      const userId = req.params.userId;
+      if (!userId) {
         res.status(400).json({
           success: false,
           error: {
@@ -394,8 +395,8 @@ export class ProfileController {
     next: NextFunction
   ): Promise<void> {
     try {
-      const userId = parseInt(req.params.userId, 10);
-      if (isNaN(userId)) {
+      const userId = req.params.userId;
+      if (!userId) {
         res.status(400).json({
           success: false,
           error: {
@@ -454,8 +455,8 @@ export class ProfileController {
     next: NextFunction
   ): Promise<void> {
     try {
-      const userId = parseInt(req.params.userId, 10);
-      if (isNaN(userId)) {
+      const userId = req.params.userId;
+      if (!userId) {
         res.status(400).json({
           success: false,
           error: {

@@ -12,7 +12,8 @@ import { ReactionType } from './types';
 export interface AuthenticatedRequest extends Request {
   user?: {
     id: string;
-    username: string;
+    email: string;
+    role: string;
   };
 }
 

@@ -117,6 +117,7 @@ export class AuthService {
     // Step 6: Create user
     const user = await this.userRepository.create({
       email,
+      username: request.username,
       passwordHash,
       emailVerificationToken: verificationTokenHash,
       emailVerificationExpiry: verificationExpiry,

@@ -9,6 +9,7 @@
 
 export interface RegisterRequest {
   email: string;
+  username: string;
   password: string;
 }
 
@@ -44,7 +45,7 @@ export interface LogoutRequest {
 
 export interface RegisterResponse {
   success: boolean;
-  userId: number;
+  userId: string;
   email: string;
   message: string;
 }
@@ -91,7 +92,7 @@ export interface AuthTokens {
 }
 
 export interface AccessTokenPayload {
-  userId: number;
+  userId: string;
   email: string;
   emailVerified: boolean;
   iat?: number;
@@ -99,8 +100,8 @@ export interface AccessTokenPayload {
 }
 
 export interface RefreshToken {
-  id: number;
-  userId: number;
+  id: string;
+  userId: string;
   tokenHash: string;
   expiresAt: Date;
   isRevoked: boolean;
@@ -115,7 +116,7 @@ export interface RefreshToken {
 // ============================================================================
 
 export interface User {
-  id: number;
+  id: string;
   email: string;
   passwordHash: string;
   emailVerified: boolean;
@@ -132,7 +133,7 @@ export interface User {
 }
 
 export interface UserPublic {
-  id: number;
+  id: string;
   email: string;
   emailVerified: boolean;
   createdAt: Date;
@@ -140,6 +141,7 @@ export interface UserPublic {
 
 export interface CreateUserData {
   email: string;
+  username: string;
   passwordHash: string;
   emailVerificationToken?: string;
   emailVerificationExpiry?: Date;
@@ -277,26 +279,26 @@ export class AuthError extends Error {
 
 export interface UserRepository {
   findByEmail(email: string): Promise<User | null>;
-  findById(id: number): Promise<User | null>;
+  findById(id: string): Promise<User | null>;
   findByVerificationToken(tokenHash: string): Promise<User | null>;
   findByPasswordResetToken(tokenHash: string): Promise<User | null>;
   create(data: CreateUserData): Promise<User>;
-  update(id: number, data: Partial<User>): Promise<User>;
-  incrementFailedAttempts(id: number): Promise<void>;
-  resetFailedAttempts(id: number): Promise<void>;
-  setAccountLocked(id: number, lockedUntil: Date): Promise<void>;
-  savePasswordResetToken(id: number, tokenHash: string, expiry: Date): Promise<void>;
-  clearPasswordResetToken(id: number): Promise<void>;
-  updatePassword(id: number, passwordHash: string): Promise<void>;
-  setEmailVerified(id: number): Promise<void>;
+  update(id: string, data: Partial<User>): Promise<User>;
+  incrementFailedAttempts(id: string): Promise<void>;
+  resetFailedAttempts(id: string): Promise<void>;
+  setAccountLocked(id: string, lockedUntil: Date): Promise<void>;
+  savePasswordResetToken(id: string, tokenHash: string, expiry: Date): Promise<void>;
+  clearPasswordResetToken(id: string): Promise<void>;
+  updatePassword(id: string, passwordHash: string): Promise<void>;
+  setEmailVerified(id: string): Promise<void>;
 }
 
 export interface TokenRepository {
   saveRefreshToken(token: Omit<RefreshToken, 'id'>): Promise<RefreshToken>;
   findRefreshToken(tokenHash: string): Promise<RefreshToken | null>;
   revokeRefreshToken(tokenHash: string): Promise<void>;
-  revokeAllUserTokens(userId: number): Promise<void>;
-  updateLastUsed(id: number): Promise<void>;
+  revokeAllUserTokens(userId: string): Promise<void>;
+  updateLastUsed(id: string): Promise<void>;
   deleteExpiredTokens(): Promise<number>;
 }
 

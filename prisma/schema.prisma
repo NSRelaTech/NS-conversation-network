@@ -15,7 +15,7 @@ datasource db {
 // ============================================================================
 
 model User {
-  id            String    @id @default(uuid()) @db.Uuid
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   email         String    @unique @db.VarChar(255)
   username      String    @unique @db.VarChar(50)
   passwordHash  String    @map("password_hash") @db.VarChar(255)
@@ -52,7 +52,7 @@ model User {
 }
 
 model UserProfile {
-  id           String    @id @default(uuid()) @db.Uuid
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId       String    @unique @map("user_id") @db.Uuid
   displayName  String?   @map("display_name") @db.VarChar(100)
   bio          String?   @db.Text
@@ -83,7 +83,7 @@ enum UserRole {
 // ============================================================================
 
 model Post {
-  id             String        @id @default(uuid()) @db.Uuid
+  id             String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   authorId       String        @map("author_id") @db.Uuid
   content        String        @db.Text
   mediaUrls      String[]      @default([]) @map("media_urls")
@@ -123,7 +123,7 @@ enum PostVisibility {
 }
 
 model PostReaction {
-  id        String       @id @default(uuid()) @db.Uuid
+  id        String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   postId    String       @map("post_id") @db.Uuid
   userId    String       @map("user_id") @db.Uuid
   type      ReactionType
@@ -153,7 +153,7 @@ enum ReactionType {
 // ============================================================================
 
 model Comment {
-  id              String    @id @default(uuid()) @db.Uuid
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   postId          String    @map("post_id") @db.Uuid
   authorId        String    @map("author_id") @db.Uuid
   parentCommentId String?   @map("parent_comment_id") @db.Uuid
@@ -180,7 +180,7 @@ model Comment {
 }
 
 model CommentReaction {
-  id        String       @id @default(uuid()) @db.Uuid
+  id        String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   commentId String       @map("comment_id") @db.Uuid
   userId    String       @map("user_id") @db.Uuid
   type      ReactionType
@@ -201,7 +201,7 @@ model CommentReaction {
 // ============================================================================
 
 model Group {
-  id           String         @id @default(uuid()) @db.Uuid
+  id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name         String         @db.VarChar(100)
   slug         String         @unique @db.VarChar(100)
   description  String?        @db.Text
@@ -235,7 +235,7 @@ enum GroupPrivacy {
 }
 
 model GroupMember {
-  id        String          @id @default(uuid()) @db.Uuid
+  id        String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   groupId   String          @map("group_id") @db.Uuid
   userId    String          @map("user_id") @db.Uuid
   role      GroupMemberRole @default(MEMBER)
@@ -264,7 +264,7 @@ enum GroupMemberRole {
 // ============================================================================
 
 model Follow {
-  id          String       @id @default(uuid()) @db.Uuid
+  id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   followerId  String       @map("follower_id") @db.Uuid
   followingId String       @map("following_id") @db.Uuid
   status      FollowStatus @default(ACCEPTED)
@@ -289,7 +289,7 @@ enum FollowStatus {
 }
 
 model Block {
-  id        String   @id @default(uuid()) @db.Uuid
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   blockerId String   @map("blocker_id") @db.Uuid
   blockedId String   @map("blocked_id") @db.Uuid
   reason    String?  @db.VarChar(255)
@@ -310,7 +310,7 @@ model Block {
 // ============================================================================
 
 model Notification {
-  id          String           @id @default(uuid()) @db.Uuid
+  id          String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId      String           @map("user_id") @db.Uuid
   type        NotificationType
   title       String           @db.VarChar(255)
@@ -349,7 +349,7 @@ enum NotificationType {
 // ============================================================================
 
 model Session {
-  id           String    @id @default(uuid()) @db.Uuid
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId       String    @map("user_id") @db.Uuid
   token        String    @unique @db.VarChar(500)
   userAgent    String?   @map("user_agent") @db.VarChar(500)
@@ -370,7 +370,7 @@ model Session {
 }
 
 model RefreshToken {
-  id          String    @id @default(uuid()) @db.Uuid
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId      String    @map("user_id") @db.Uuid
   token       String    @unique @db.VarChar(500)
   family      String    @db.VarChar(100)
@@ -394,7 +394,7 @@ model RefreshToken {
 // ============================================================================
 
 model AuditLog {
-  id         String   @id @default(uuid()) @db.Uuid
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId     String?  @map("user_id") @db.Uuid
   action     String   @db.VarChar(100)
   entityType String   @map("entity_type") @db.VarChar(50)

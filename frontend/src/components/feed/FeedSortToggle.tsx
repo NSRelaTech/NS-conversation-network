@@ -1,4 +1,3 @@
-import { Button } from '@/components/ui/button';
 import { Clock, TrendingUp } from 'lucide-react';
 
 export type FeedSort = 'latest' | 'popular';
@@ -10,26 +9,31 @@ export function FeedSortToggle({
   value: FeedSort;
   onChange: (sort: FeedSort) => void;
 }) {
+  const options = [
+    { key: 'latest' as const, icon: Clock, label: 'Latest' },
+    { key: 'popular' as const, icon: TrendingUp, label: 'Popular' },
+  ];
+
   return (
-    <div className="flex gap-1 bg-stone-100 rounded-lg p-0.5 w-fit">
-      <Button
-        variant={value === 'latest' ? 'secondary' : 'ghost'}
-        size="sm"
-        className="h-7 text-xs gap-1"
-        onClick={() => onChange('latest')}
-      >
-        <Clock className="h-3 w-3" />
-        Latest
-      </Button>
-      <Button
-        variant={value === 'popular' ? 'secondary' : 'ghost'}
-        size="sm"
-        className="h-7 text-xs gap-1"
-        onClick={() => onChange('popular')}
-      >
-        <TrendingUp className="h-3 w-3" />
-        Popular
-      </Button>
+    <div className="inline-flex rounded-lg bg-stone-100 p-1 gap-0.5">
+      {options.map(({ key, icon: Icon, label }) => {
+        const active = value === key;
+        return (
+          <button
+            key={key}
+            type="button"
+            onClick={() => onChange(key)}
+            className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-all ${
+              active
+                ? 'bg-white text-stone-900 shadow-sm'
+                : 'text-stone-500 hover:text-stone-700'
+            }`}
+          >
+            <Icon className="h-3.5 w-3.5" />
+            {label}
+          </button>
+        );
+      })}
     </div>
   );
 }

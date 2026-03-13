@@ -11,6 +11,7 @@ import { CommentSection } from './CommentSection';
 interface PostAuthor {
   id: string;
   username: string;
+  displayName?: string | null;
   profilePictureUrl: string | null;
 }
 
@@ -131,7 +132,7 @@ export function PostCard({ post }: { post: Post }) {
           </Avatar>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <span className="font-medium text-stone-900">{post.author.username}</span>
+              <span className="font-medium text-stone-900">{post.author.displayName || post.author.username}</span>
               <span className="text-sm text-stone-400">{timeAgo(post.createdAt)}</span>
               {isOwner && (
                 <Button

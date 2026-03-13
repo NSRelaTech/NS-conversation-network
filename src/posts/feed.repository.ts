@@ -83,6 +83,7 @@ export class FeedRepository {
         json_build_object(
           'id', u.id,
           'username', u.username,
+          'displayName', up.display_name,
           'profilePictureUrl', up.avatar_url
         ) AS author,
         CASE
@@ -139,6 +140,7 @@ export class FeedRepository {
         json_build_object(
           'id', u.id,
           'username', u.username,
+          'displayName', up.display_name,
           'profilePictureUrl', up.avatar_url
         ) AS author,
         json_build_object('id', g.id, 'name', g.name) AS group,
@@ -192,6 +194,7 @@ export class FeedRepository {
         json_build_object(
           'id', u.id,
           'username', u.username,
+          'displayName', up.display_name,
           'profilePictureUrl', up.avatar_url
         ) AS author,
         CASE

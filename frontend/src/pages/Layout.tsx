@@ -44,7 +44,7 @@ export function Layout() {
         <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
           <div className="flex items-center gap-6">
             <Link to="/" className="text-lg font-semibold text-stone-900">
-              Community
+              NS Conversation Network
             </Link>
             <div className="flex gap-1">
               <Link to="/" className={buttonVariants({ variant: "ghost", size: "sm" })}>
@@ -95,8 +95,8 @@ export function Layout() {
       {/* Mobile top bar — logo + avatar only */}
       <nav className="sticky top-0 z-50 border-b bg-white/95 backdrop-blur lg:hidden">
         <div className="flex h-14 items-center justify-between px-4">
-          <Link to="/" className="text-lg font-semibold text-stone-900">
-            Community
+          <Link to="/" className="text-base font-semibold text-stone-900">
+            NS Conversation Network
           </Link>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

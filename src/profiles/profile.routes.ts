@@ -21,7 +21,7 @@ export function createProfileRoutes(
   const controller = new ProfileController();
 
   // ============================================================
-  // Public Routes (with optional auth for privacy handling)
+  // Static routes MUST come before parameterized routes
   // ============================================================
 
   /**
@@ -35,6 +35,13 @@ export function createProfileRoutes(
   } else {
     router.get('/search', controller.searchProfiles);
   }
+
+  /**
+   * @route   GET /api/v1/profiles/me
+   * @desc    Get current user's profile
+   * @access  Private
+   */
+  router.get('/me', authMiddleware, controller.getMyProfile);
 
   /**
    * @route   GET /api/v1/profiles/:userId
@@ -51,13 +58,6 @@ export function createProfileRoutes(
   // ============================================================
   // Protected Routes (require authentication)
   // ============================================================
-
-  /**
-   * @route   GET /api/v1/profiles/me
-   * @desc    Get current user's profile
-   * @access  Private
-   */
-  router.get('/me', authMiddleware, controller.getMyProfile);
 
   /**
    * @route   POST /api/v1/profiles

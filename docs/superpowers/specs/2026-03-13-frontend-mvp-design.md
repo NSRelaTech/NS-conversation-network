@@ -3,7 +3,7 @@
 **Date:** 2026-03-13
 **Status:** Approved
 **Contributor:** Artem Zhiganov (NSRelaTech fork)
-**Upstream:** github.com/dragan-spiridonov/community-social-network (via NSRelaTech fork)
+**Upstream:** github.com/dragan-spiridonov/NS-conversation-network (via NSRelaTech fork)
 
 ---
 
@@ -37,7 +37,7 @@ Build a complete, production-ready frontend MVP for the Community Social Network
 ## Repo Structure
 
 ```
-community-social-network/
+NS-conversation-network/
 ├── src/                    # Backend (existing, needs wiring)
 ├── prisma/                 # Schema (existing)
 ├── frontend/               # NEW — React frontend

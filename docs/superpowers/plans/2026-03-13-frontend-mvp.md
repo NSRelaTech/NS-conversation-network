@@ -531,7 +531,7 @@ git commit -m "feat: wire up backend with Prisma bootstrap and real routes"
 
 Use Neon MCP tools:
 ```
-mcp__Neon__create_project — name: "community-social-network"
+mcp__Neon__create_project — name: "NS-conversation-network"
 ```
 Save the connection string.
 
@@ -586,7 +586,7 @@ git commit -m "docs: update .env.example with required vars"
 - [ ] **Step 1: Create Vite React TypeScript project**
 
 ```bash
-cd /path/to/community-social-network
+cd /path/to/NS-conversation-network
 npm create vite@latest frontend -- --template react-ts
 cd frontend
 npm install

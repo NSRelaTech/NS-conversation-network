@@ -1,5 +1,5 @@
 {
-  "name": "community-social-network",
+  "name": "ns-conversation-network",
   "version": "1.0.0",
   "description": "Community Social Network MVP - A scalable social platform for community engagement",
   "main": "dist/index.js",
